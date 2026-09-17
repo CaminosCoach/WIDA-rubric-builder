@@ -1,0 +1,10 @@
+@media (max-width: 980px){
+  #builder-view{grid-template-columns:1fr;}
+  .draft-pane{order:-1;}
+  .obj-grid{grid-template-columns:1fr;}
+  .obj-col + .obj-col{border-left:none; border-top:1px solid var(--line);}
+  .scaffold-bands{grid-template-columns:1fr;}
+  .scaffold-band + .scaffold-band{border-left:none; border-top:1px solid var(--line);}
+  .stepper{display:none;}
+  .field-row, .picker-row{grid-template-columns:1fr;}
+}

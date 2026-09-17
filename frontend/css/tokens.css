@@ -1,0 +1,31 @@
+:root{
+  --ink:#181f2e;
+  --ink-soft:#232c40;
+  --ink-softer:#2f3a52;
+  --paper:#f8f6ef;
+  --paper-dim:#efece1;
+  --line:#ddd8c6;
+  --line-dark:#3b4560;
+  --amber:#c68a3d;
+  --amber-deep:#93611f;
+  --sage:#5c8069;
+  --sage-deep:#3f5c4c;
+  --clay:#b15a3e;
+  --text:#20261c;
+  --text-soft:#5a5e4f;
+  --text-on-ink:#e9e6da;
+  --text-on-ink-dim:#a9aec2;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:var(--ink);
+  color:var(--text);
+  font-family:'IBM Plex Sans', sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3,.serif{font-family:'Fraunces', serif;}
+.mono{font-family:'IBM Plex Mono', monospace;}
+a{color:inherit;}
+::selection{background:var(--amber); color:var(--ink);}
+

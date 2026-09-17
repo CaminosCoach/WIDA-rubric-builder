@@ -1,0 +1,25 @@
+# Secrets — never commit a real API key
+.env
+backend/.env
+*.env.local
+.env.example
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+
+# Exports produced while testing
+*.docx
+*.pdf
+
+# Reference material and generated outputs — third-party copyrighted source
+# (WIDA Language Charts) plus sample rubrics. Kept local, never published.
+docs/
+
+# macOS
+.DS_Store
+
+# Claude Code — personal/local settings, not shared with the team
+.claude/settings.local.json

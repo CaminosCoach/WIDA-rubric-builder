@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rubric Builder — WIDA-Aligned Language Rubrics</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/builder.css">
+<link rel="stylesheet" href="css/output.css">
+<link rel="stylesheet" href="css/responsive.css">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+</head>
+<body>
+
+<div class="shell-header">
+  <div class="shell-header-inner">
+    <div class="brand">
+      <span class="brand-mark">R</span>
+      <span class="brand-name">Rubric Builder</span>
+      <span class="brand-tag">WIDA-aligned language rubrics</span>
+    </div>
+    <div class="stepper" id="stepper"></div>
+  </div>
+</div>
+
+<!-- ============ BUILDER VIEW ============ -->
+<div id="builder-view">
+  <div class="question-pane">
+    <div id="step-eyebrow" class="step-eyebrow"></div>
+    <h1 id="step-title" class="step-title"></h1>
+    <p id="step-sub" class="step-sub"></p>
+    <div id="step-fields"></div>
+    <div class="nav-row">
+      <button class="btn btn-ghost" id="btn-back">Back</button>
+      <button class="btn btn-primary" id="btn-next">Next</button>
+    </div>
+  </div>
+
+  <div class="draft-pane">
+    <div class="draft-label">Live draft — fills in as you answer</div>
+    <div class="draft-card">
+      <div class="draft-title" id="d-title">Untitled rubric</div>
+      <div class="draft-meta" id="d-meta">Grade — · Subject —</div>
+
+      <div class="draft-block">
+        <div class="k">Focusing question</div>
+        <div class="v empty" id="d-fq">Not yet entered</div>
+      </div>
+
+      <div class="draft-block">
+        <div class="k">End-of-unit product (Discourse)</div>
+        <div class="v empty" id="d-discourse">Not yet entered</div>
+      </div>
+
+      <div class="draft-block">
+        <div class="k">Sentence-level target</div>
+        <div class="v empty" id="d-sentence">Not yet entered</div>
+      </div>
+
+      <div class="draft-block">
+        <div class="k">Word-level vocabulary</div>
+        <div class="draft-tags" id="d-words"></div>
+      </div>
+
+      <div class="draft-block">
+        <div class="k">Standards addressed</div>
+        <div class="draft-tags" id="d-standards"></div>
+      </div>
+
+      <div class="draft-foot" id="d-foot">Answer the questions on the left — this card becomes the brief we send to build your rubric.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ OUTPUT VIEW ============ -->
+<div id="output-view">
+  <div class="out-topbar">
+    <div class="out-topbar-inner">
+      <div class="jump-wrap">
+        <span class="jump-label">Jump to</span>
+        <select id="jump-select"></select>
+      </div>
+      <div class="out-actions">
+        <button class="btn-restart" id="btn-back-to-builder">&larr; Back to edit</button>
+        <button class="btn-export" id="btn-export-word">Export as Word</button>
+        <button class="btn-export" id="btn-export-pdf">Export as PDF</button>
+        <button class="btn-restart" id="btn-restart">Start a new rubric</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="out-body">
+    <div class="out-doc" id="out-doc">
+      <!-- populated by js/output/render.js -->
+    </div>
+  </div>
+</div>
+
+<!-- ============ GENERATING OVERLAY ============ -->
+<div class="gen-overlay" id="gen-overlay">
+  <div class="gen-box">
+    <div class="gen-spinner"></div>
+    <div class="gen-title">Building your rubric</div>
+    <div class="gen-note" id="gen-note">Sending your brief to the language model…</div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>

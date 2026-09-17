@@ -1,0 +1,2055 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rubric Builder — WIDA-Aligned Language Rubrics</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<style>
+  :root{
+    --ink:#181f2e;
+    --ink-soft:#232c40;
+    --ink-softer:#2f3a52;
+    --paper:#f8f6ef;
+    --paper-dim:#efece1;
+    --line:#ddd8c6;
+    --line-dark:#3b4560;
+    --amber:#c68a3d;
+    --amber-deep:#93611f;
+    --sage:#5c8069;
+    --sage-deep:#3f5c4c;
+    --clay:#b15a3e;
+    --text:#20261c;
+    --text-soft:#5a5e4f;
+    --text-on-ink:#e9e6da;
+    --text-on-ink-dim:#a9aec2;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--ink);
+    color:var(--text);
+    font-family:'IBM Plex Sans', sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,.serif{font-family:'Fraunces', serif;}
+  .mono{font-family:'IBM Plex Mono', monospace;}
+  a{color:inherit;}
+  ::selection{background:var(--amber); color:var(--ink);}
+
+  /* ---------- Shell / header ---------- */
+  .shell-header{
+    background:var(--ink);
+    color:var(--text-on-ink);
+    padding:22px 40px 20px;
+    border-bottom:1px solid var(--line-dark);
+  }
+  .shell-header-inner{
+    max-width:1240px;
+    margin:0 auto;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:24px;
+  }
+  .brand{
+    display:flex;
+    align-items:baseline;
+    gap:10px;
+  }
+  .brand-mark{
+    width:26px;height:26px;
+    border:1.5px solid var(--amber);
+    border-radius:50%;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    color:var(--amber);
+    flex-shrink:0;
+  }
+  .brand-name{
+    font-family:'Fraunces', serif;
+    font-size:19px;
+    font-weight:600;
+    letter-spacing:0.2px;
+  }
+  .brand-tag{
+    font-size:12.5px;
+    color:var(--text-on-ink-dim);
+    padding-left:2px;
+  }
+
+  .stepper{
+    display:flex;
+    align-items:center;
+    gap:0;
+  }
+  .stepper .step{
+    display:flex;
+    align-items:center;
+    gap:9px;
+    padding:6px 13px;
+    font-size:12.5px;
+    color:var(--text-on-ink-dim);
+    border-left:1px solid var(--line-dark);
+    white-space:nowrap;
+  }
+  .stepper .step:first-child{border-left:none;}
+  .stepper .step .num{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    width:18px;height:18px;
+    border-radius:50%;
+    border:1px solid var(--line-dark);
+    display:flex;align-items:center;justify-content:center;
+    flex-shrink:0;
+  }
+  .stepper .step.active{color:var(--text-on-ink);}
+  .stepper .step.active .num{background:var(--amber); border-color:var(--amber); color:var(--ink); font-weight:600;}
+  .stepper .step.done .num{background:var(--sage); border-color:var(--sage); color:var(--ink); font-weight:600;}
+  .stepper .step.done{color:var(--text-on-ink-dim);}
+
+  /* ---------- Builder layout ---------- */
+  #builder-view{
+    max-width:1240px;
+    margin:0 auto;
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    min-height:calc(100vh - 78px);
+  }
+  .question-pane{
+    background:var(--paper);
+    padding:52px 56px 40px;
+    display:flex;
+    flex-direction:column;
+  }
+  .draft-pane{
+    background:var(--ink-soft);
+    padding:52px 48px 40px;
+    color:var(--text-on-ink);
+    position:relative;
+  }
+  .draft-pane::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    background:
+      repeating-linear-gradient(180deg, transparent, transparent 27px, rgba(233,230,218,0.035) 28px);
+    pointer-events:none;
+  }
+
+  .step-eyebrow{
+    font-size:13px;
+    color:var(--text-soft);
+    margin-bottom:6px;
+  }
+  .step-title{
+    font-size:28px;
+    font-weight:600;
+    margin:0 0 8px;
+    line-height:1.15;
+  }
+  .step-sub{
+    font-size:14.5px;
+    color:var(--text-soft);
+    margin:0 0 34px;
+    max-width:48ch;
+    line-height:1.5;
+  }
+
+  .field{margin-bottom:28px;}
+  .field label.q{
+    display:block;
+    font-size:14.5px;
+    font-weight:600;
+    margin-bottom:4px;
+    color:var(--text);
+  }
+  .field .hint{
+    font-size:12.5px;
+    color:var(--text-soft);
+    margin-bottom:10px;
+    line-height:1.4;
+  }
+  input[type=text], input[type=number], textarea, select{
+    width:100%;
+    font-family:'IBM Plex Sans', sans-serif;
+    font-size:14.5px;
+    color:var(--text);
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:2px;
+    padding:11px 13px;
+    line-height:1.5;
+    resize:vertical;
+  }
+  textarea{min-height:74px;}
+  input[type=text]:focus, input[type=number]:focus, textarea:focus, select:focus{
+    outline:none;
+    border-color:var(--amber-deep);
+    box-shadow:0 0 0 3px rgba(198,138,61,0.18);
+  }
+  select{appearance:none; background-image:linear-gradient(45deg, transparent 50%, var(--text-soft) 50%), linear-gradient(135deg, var(--text-soft) 50%, transparent 50%); background-position: calc(100% - 18px) calc(50% - 3px), calc(100% - 13px) calc(50% - 3px); background-size:5px 5px, 5px 5px; background-repeat:no-repeat;}
+
+  .field-row{display:grid; grid-template-columns:1fr 1fr; gap:16px;}
+
+  .checklist{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+  }
+  .chk{
+    display:flex;
+    align-items:center;
+    gap:7px;
+    border:1px solid var(--line);
+    background:#fff;
+    padding:7px 12px;
+    border-radius:2px;
+    font-size:13px;
+    cursor:pointer;
+    user-select:none;
+  }
+  .chk input{accent-color:var(--amber-deep);}
+  .chk.checked{border-color:var(--amber-deep); background:#fbf3e6;}
+
+  .upload{
+    border:1px dashed var(--line);
+    border-radius:2px;
+    padding:14px 15px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    background:#fff;
+    font-size:13px;
+    color:var(--text-soft);
+  }
+  .upload .btn-mini{
+    border:1px solid var(--text);
+    background:transparent;
+    padding:6px 12px;
+    font-size:12.5px;
+    border-radius:2px;
+    cursor:pointer;
+    font-family:'IBM Plex Sans', sans-serif;
+    flex-shrink:0;
+  }
+  .upload input[type=file]{display:none;}
+  .upload .fname{font-size:12.5px; color:var(--text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+
+  .nav-row{
+    margin-top:auto;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding-top:28px;
+    border-top:1px solid var(--line);
+  }
+  .btn{
+    font-family:'IBM Plex Sans', sans-serif;
+    font-size:14px;
+    font-weight:600;
+    padding:12px 22px;
+    border-radius:2px;
+    cursor:pointer;
+    border:1px solid transparent;
+  }
+  .btn-primary{
+    background:var(--amber-deep);
+    color:#fff8ec;
+    border-color:var(--amber-deep);
+  }
+  .btn-primary:hover{background:#7c5019;}
+  .btn-ghost{
+    background:transparent;
+    color:var(--text);
+    border-color:var(--line);
+  }
+  .btn-ghost:hover{border-color:var(--text);}
+  .btn-ghost:disabled{opacity:0.35; cursor:default;}
+  .btn-ghost:disabled:hover{border-color:var(--line);}
+
+  /* ---------- Method toggle (standards step) ---------- */
+  .method-toggle{
+    display:inline-flex;
+    border:1px solid var(--line);
+    border-radius:2px;
+    overflow:hidden;
+    margin-bottom:6px;
+  }
+  .method-btn{
+    font-family:'IBM Plex Sans', sans-serif;
+    font-size:13px;
+    font-weight:600;
+    padding:9px 16px;
+    background:#fff;
+    border:none;
+    cursor:pointer;
+    color:var(--text-soft);
+  }
+  .method-btn + .method-btn{border-left:1px solid var(--line);}
+  .method-btn.active{background:var(--ink); color:var(--text-on-ink);}
+
+  .subject-note{
+    font-size:12.5px;
+    color:var(--amber-deep);
+    background:#fbf3e6;
+    border:1px solid #eddab3;
+    padding:9px 12px;
+    border-radius:2px;
+    margin-bottom:16px;
+    line-height:1.5;
+  }
+
+  .picker-row{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:12px;
+    margin-bottom:12px;
+  }
+  .subskill-box{
+    border:1px solid var(--line);
+    background:#fff;
+    padding:14px 16px;
+    margin-bottom:14px;
+  }
+  .subskill-box .std-title{font-size:13.5px; font-weight:600; margin-bottom:8px;}
+  .subskill-box ul{margin:0; padding-left:18px; font-size:13px; color:var(--text-soft); line-height:1.6;}
+  .btn-add{
+    background:var(--sage-deep);
+    color:#f2f6f2;
+    border:1px solid var(--sage-deep);
+    font-size:13px;
+    font-weight:600;
+    padding:9px 16px;
+    border-radius:2px;
+    cursor:pointer;
+    font-family:'IBM Plex Sans', sans-serif;
+  }
+  .btn-add:hover{background:#33473a;}
+  .btn-add:disabled{opacity:0.4; cursor:default;}
+
+  .std-chips{display:flex; flex-wrap:wrap; gap:8px; margin-top:14px;}
+  .std-chip{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    background:var(--paper-dim);
+    border:1px solid var(--line);
+    padding:6px 8px 6px 12px;
+    border-radius:2px;
+    font-size:12.5px;
+  }
+  .std-chip .code{font-family:'IBM Plex Mono', monospace; font-weight:600; color:var(--amber-deep);}
+  .std-chip .rm{
+    cursor:pointer;
+    border:none;
+    background:none;
+    color:var(--text-soft);
+    font-size:14px;
+    line-height:1;
+    padding:2px 4px;
+  }
+  .std-chip .rm:hover{color:var(--clay);}
+  .empty-note{font-size:12.5px; color:var(--text-soft); font-style:italic; margin-top:10px;}
+
+  /* ---------- Proficiency step ---------- */
+  .prof-total{max-width:220px; margin-bottom:24px;}
+  .prof-table{border:1px solid var(--line); background:#fff;}
+  .prof-row{
+    display:grid;
+    grid-template-columns:1fr 100px;
+    gap:12px;
+    align-items:center;
+    padding:11px 16px;
+  }
+  .prof-row + .prof-row{border-top:1px solid var(--line);}
+  .prof-row .lvl-label{font-size:13.5px; font-weight:500;}
+  .prof-running{
+    margin-top:14px;
+    font-size:13px;
+    padding:10px 14px;
+    border-radius:2px;
+    background:var(--paper-dim);
+    border:1px solid var(--line);
+    color:var(--text-soft);
+  }
+  .prof-running.match{border-color:#bcd3c2; background:#eef4ef; color:var(--sage-deep);}
+  .prof-running.mismatch{border-color:#eddab3; background:#fbf3e6; color:var(--amber-deep);}
+
+  /* ---------- Review step ---------- */
+  .review-group{margin-bottom:26px;}
+  .review-group-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:2px;
+  }
+  .review-group-head h4{font-size:13px; color:var(--amber-deep); margin:0; font-weight:600;}
+  .edit-link{
+    font-size:12px;
+    font-weight:600;
+    color:var(--text-soft);
+    background:none;
+    border:none;
+    cursor:pointer;
+    text-decoration:underline;
+    padding:0;
+    font-family:'IBM Plex Sans', sans-serif;
+  }
+  .edit-link:hover{color:var(--amber-deep);}
+  .review-rows{border:1px solid var(--line); background:#fff;}
+  .review-rows .rrow{
+    display:grid;
+    grid-template-columns:34% 66%;
+    gap:14px;
+    padding:12px 16px;
+    font-size:13.5px;
+    border-bottom:1px solid var(--line);
+  }
+  .review-rows .rrow:last-child{border-bottom:none;}
+  .review-rows .rrow .rk{font-weight:600; color:var(--text-soft);}
+  .review-rows .rrow .rv{line-height:1.5;}
+
+  /* ---------- Draft (live document) ---------- */
+  .draft-label{
+    font-size:12.5px;
+    letter-spacing:0.3px;
+    color:var(--text-on-ink-dim);
+    margin-bottom:18px;
+  }
+  .draft-card{
+    position:relative;
+    background:var(--paper);
+    color:var(--text);
+    border-radius:3px;
+    padding:30px 30px 26px;
+    box-shadow: 0 22px 50px rgba(0,0,0,0.35);
+    min-height:420px;
+  }
+  .draft-title{
+    font-family:'Fraunces', serif;
+    font-size:19px;
+    font-weight:600;
+    margin:0 0 3px;
+    color:var(--text);
+  }
+  .draft-meta{
+    font-size:12px;
+    color:var(--text-soft);
+    margin-bottom:18px;
+    padding-bottom:14px;
+    border-bottom:1px solid var(--line);
+  }
+  .draft-block{margin-bottom:16px;}
+  .draft-block .k{
+    font-size:11px;
+    color:var(--amber-deep);
+    font-weight:600;
+    margin-bottom:3px;
+  }
+  .draft-block .v{
+    font-size:13.5px;
+    line-height:1.5;
+    color:var(--text);
+  }
+  .draft-block .v.empty{color:#b8b3a1; font-style:italic;}
+  .draft-tags{display:flex; flex-wrap:wrap; gap:6px; margin-top:4px;}
+  .draft-tag{
+    font-size:11px;
+    background:var(--paper-dim);
+    border:1px solid var(--line);
+    padding:3px 8px;
+    border-radius:2px;
+    color:var(--text-soft);
+  }
+  .draft-foot{
+    margin-top:22px;
+    padding-top:14px;
+    border-top:1px dashed var(--line);
+    font-size:11.5px;
+    color:var(--text-soft);
+  }
+
+  /* ---------- Output view ---------- */
+  #output-view{display:none;}
+  .out-topbar{
+    position:sticky;
+    top:0;
+    z-index:50;
+    background:var(--ink);
+    border-bottom:1px solid var(--line-dark);
+    padding:14px 40px;
+  }
+  .out-topbar-inner{
+    max-width:960px;
+    margin:0 auto;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:16px;
+    flex-wrap:wrap;
+  }
+  .jump-wrap{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    flex:1;
+    min-width:260px;
+  }
+  .jump-label{
+    font-size:12.5px;
+    color:var(--text-on-ink-dim);
+    white-space:nowrap;
+  }
+  #jump-select{
+    flex:1;
+    max-width:400px;
+    background:var(--ink-softer);
+    color:var(--text-on-ink);
+    border:1px solid var(--line-dark);
+    border-radius:2px;
+    padding:9px 34px 9px 12px;
+    font-size:13.5px;
+    font-family:'IBM Plex Sans', sans-serif;
+    appearance:none;
+    background-image:linear-gradient(45deg, transparent 50%, var(--text-on-ink-dim) 50%), linear-gradient(135deg, var(--text-on-ink-dim) 50%, transparent 50%);
+    background-position: calc(100% - 16px) calc(50% - 2px), calc(100% - 11px) calc(50% - 2px);
+    background-size:5px 5px, 5px 5px;
+    background-repeat:no-repeat;
+  }
+  #jump-select:focus{outline:none; border-color:var(--amber);}
+  .out-actions{display:flex; align-items:center; gap:8px; flex-wrap:wrap;}
+  .btn-restart, .btn-export{
+    background:transparent;
+    border:1px solid var(--line-dark);
+    color:var(--text-on-ink-dim);
+    font-size:12.5px;
+    padding:9px 14px;
+    border-radius:2px;
+    cursor:pointer;
+    white-space:nowrap;
+    font-family:'IBM Plex Sans', sans-serif;
+  }
+  .btn-restart:hover, .btn-export:hover{border-color:var(--amber); color:var(--text-on-ink);}
+
+  .toast{
+    position:fixed;
+    bottom:24px;
+    left:50%;
+    transform:translateX(-50%) translateY(20px);
+    background:var(--ink);
+    color:var(--text-on-ink);
+    border:1px solid var(--amber);
+    padding:12px 20px;
+    border-radius:2px;
+    font-size:13px;
+    z-index:100;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity 0.2s ease, transform 0.2s ease;
+    box-shadow:0 12px 30px rgba(0,0,0,0.4);
+  }
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+
+  .out-body{
+    background:var(--paper);
+    min-height:100vh;
+  }
+  .out-doc{
+    max-width:900px;
+    margin:0 auto;
+    padding:48px 40px 100px;
+  }
+  .out-header{
+    margin-bottom:38px;
+    padding-bottom:28px;
+    border-bottom:2px solid var(--ink);
+  }
+  .out-kicker{
+    font-size:13px;
+    color:var(--amber-deep);
+    font-weight:600;
+    margin-bottom:8px;
+  }
+  .out-h1{
+    font-size:34px;
+    font-weight:600;
+    margin:0 0 14px;
+    line-height:1.15;
+  }
+  .out-fq{
+    font-size:15.5px;
+    color:var(--text-soft);
+    line-height:1.55;
+    max-width:64ch;
+  }
+  .out-fq b{color:var(--text); font-weight:600;}
+
+  .out-meta-row{
+    display:flex;
+    flex-wrap:wrap;
+    gap:22px;
+    margin-top:20px;
+  }
+  .out-meta-item .lbl{font-size:11px; color:var(--text-soft); margin-bottom:2px;}
+  .out-meta-item .val{font-size:13.5px; font-weight:600;}
+
+  section.out-section{
+    margin-bottom:52px;
+    scroll-margin-top:78px;
+  }
+  .sec-head{
+    display:flex;
+    align-items:baseline;
+    gap:12px;
+    margin-bottom:18px;
+  }
+  .sec-num{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    color:var(--amber-deep);
+    flex-shrink:0;
+  }
+  .sec-title{
+    font-size:22px;
+    font-weight:600;
+    margin:0;
+  }
+  .sec-note{
+    font-size:13.5px;
+    color:var(--text-soft);
+    margin:-8px 0 18px;
+    max-width:66ch;
+    line-height:1.5;
+  }
+
+  .obj-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:0;
+    border:1px solid var(--line);
+  }
+  .obj-col{padding:20px 22px;}
+  .obj-col + .obj-col{border-left:1px solid var(--line);}
+  .obj-col h4{
+    font-size:12.5px;
+    color:var(--amber-deep);
+    font-weight:600;
+    margin:0 0 12px;
+  }
+  .obj-dim{margin-bottom:14px;}
+  .obj-dim .dname{font-size:11.5px; font-weight:600; color:var(--text-soft); margin-bottom:3px;}
+  .obj-dim .dtext{font-size:13.5px; line-height:1.5;}
+
+  .content-obj-list{list-style:none; margin:0; padding:0; border:1px solid var(--line);}
+  .content-obj-list li{
+    display:grid;
+    grid-template-columns: 42% 58%;
+    gap:18px;
+    padding:14px 20px;
+    font-size:13.5px;
+    line-height:1.5;
+  }
+  .content-obj-list li + li{border-top:1px solid var(--line);}
+  .content-obj-list .co-left{font-weight:600;}
+  .content-obj-list .co-right{color:var(--text-soft);}
+
+  table.rubric{
+    width:100%;
+    border-collapse:collapse;
+    font-size:12.8px;
+    border:1px solid var(--line);
+  }
+  table.rubric th, table.rubric td{
+    border:1px solid var(--line);
+    padding:12px 13px;
+    text-align:left;
+    vertical-align:top;
+    line-height:1.5;
+  }
+  table.rubric thead th{
+    background:var(--ink);
+    color:var(--text-on-ink);
+    font-weight:600;
+    font-size:12px;
+    position:sticky;
+    top:47px;
+  }
+  table.rubric td:first-child, table.rubric th:first-child{width:118px;}
+  .lvl-chip{
+    display:inline-flex;
+    align-items:center;
+    gap:7px;
+    font-weight:600;
+  }
+  .lvl-dot{
+    width:22px;height:22px;
+    border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    flex-shrink:0;
+  }
+  .lvl-name{font-size:11.5px; color:var(--text-soft); font-weight:500;}
+  tr.lvl6 td:first-child .lvl-dot{background:var(--ink); color:#fff;}
+  tr.lvl5 td:first-child .lvl-dot{background:var(--amber-deep); color:#fff;}
+  tr.lvl4 td:first-child .lvl-dot{background:var(--amber); color:#3a2a10;}
+  tr.lvl3 td:first-child .lvl-dot{background:#dcb87c; color:#3a2a10;}
+  tr.lvl2 td:first-child .lvl-dot{background:#e9d7ae; color:#3a2a10;}
+  tr.lvl1 td:first-child .lvl-dot{background:#f1e6c8; color:#3a2a10;}
+  .table-scroll{overflow-x:auto;}
+  .ex-note{display:block; margin-top:6px; font-size:12px; color:var(--sage-deep);}
+  .ex-note b{color:var(--sage-deep);}
+
+  .evidence-list{list-style:none; margin:0; padding:0; border:1px solid var(--line);}
+  .evidence-list li{
+    display:flex;
+    align-items:flex-start;
+    gap:12px;
+    padding:13px 18px;
+    font-size:13.5px;
+    line-height:1.5;
+  }
+  .evidence-list li + li{border-top:1px solid var(--line);}
+  .evidence-list .box{
+    width:16px;height:16px;
+    border:1.5px solid var(--sage-deep);
+    border-radius:2px;
+    flex-shrink:0;
+    margin-top:2px;
+  }
+
+  .scaffold-bands{display:grid; grid-template-columns:repeat(3,1fr); gap:0; border:1px solid var(--line);}
+  .scaffold-band{padding:18px 20px;}
+  .scaffold-band + .scaffold-band{border-left:1px solid var(--line);}
+  .scaffold-band .band-lvl{font-size:12px; font-weight:600; color:var(--amber-deep); margin-bottom:10px;}
+  .scaffold-band ul{margin:0; padding-left:16px; font-size:13px; line-height:1.6; color:var(--text-soft);}
+
+  .assumption-list{list-style:none; margin:0; padding:0;}
+  .assumption-list li{
+    padding:11px 0;
+    font-size:13.5px;
+    line-height:1.5;
+    color:var(--text-soft);
+    border-bottom:1px solid var(--line);
+    display:flex;
+    gap:12px;
+  }
+  .assumption-list li:last-child{border-bottom:none;}
+  .assumption-list .tag{
+    flex-shrink:0;
+    font-size:10.5px;
+    font-family:'IBM Plex Mono', monospace;
+    color:var(--sage-deep);
+    background:#eaf0ea;
+    border:1px solid #cddccf;
+    padding:2px 6px;
+    border-radius:2px;
+    height:fit-content;
+    margin-top:2px;
+  }
+
+  @media (max-width: 980px){
+    #builder-view{grid-template-columns:1fr;}
+    .draft-pane{order:-1;}
+    .obj-grid{grid-template-columns:1fr;}
+    .obj-col + .obj-col{border-left:none; border-top:1px solid var(--line);}
+    .scaffold-bands{grid-template-columns:1fr;}
+    .scaffold-band + .scaffold-band{border-left:none; border-top:1px solid var(--line);}
+    .stepper{display:none;}
+    .field-row, .picker-row{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+
+<div class="shell-header">
+  <div class="shell-header-inner">
+    <div class="brand">
+      <span class="brand-mark">R</span>
+      <span class="brand-name">Rubric Builder</span>
+      <span class="brand-tag">WIDA-aligned language rubrics</span>
+    </div>
+    <div class="stepper" id="stepper"></div>
+  </div>
+</div>
+
+<!-- ============ BUILDER VIEW ============ -->
+<div id="builder-view">
+  <div class="question-pane">
+    <div id="step-eyebrow" class="step-eyebrow"></div>
+    <h1 id="step-title" class="step-title"></h1>
+    <p id="step-sub" class="step-sub"></p>
+    <div id="step-fields"></div>
+    <div class="nav-row">
+      <button class="btn btn-ghost" id="btn-back">Back</button>
+      <button class="btn btn-primary" id="btn-next">Next</button>
+    </div>
+  </div>
+
+  <div class="draft-pane">
+    <div class="draft-label">Live draft — fills in as you answer</div>
+    <div class="draft-card">
+      <div class="draft-title" id="d-title">Untitled rubric</div>
+      <div class="draft-meta" id="d-meta">Grade — · Subject —</div>
+
+      <div class="draft-block">
+        <div class="k">Focusing question</div>
+        <div class="v empty" id="d-fq">Not yet entered</div>
+      </div>
+
+      <div class="draft-block">
+        <div class="k">End-of-unit product (Discourse)</div>
+        <div class="v empty" id="d-discourse">Not yet entered</div>
+      </div>
+
+      <div class="draft-block">
+        <div class="k">Sentence-level target</div>
+        <div class="v empty" id="d-sentence">Not yet entered</div>
+      </div>
+
+      <div class="draft-block">
+        <div class="k">Word-level vocabulary</div>
+        <div class="draft-tags" id="d-words"></div>
+      </div>
+
+      <div class="draft-block">
+        <div class="k">Standards addressed</div>
+        <div class="draft-tags" id="d-standards"></div>
+      </div>
+
+      <div class="draft-foot" id="d-foot">Answer the questions on the left — this card becomes the brief we send to build your rubric.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ OUTPUT VIEW ============ -->
+<div id="output-view">
+  <div class="out-topbar">
+    <div class="out-topbar-inner">
+      <div class="jump-wrap">
+        <span class="jump-label">Jump to</span>
+        <select id="jump-select"></select>
+      </div>
+      <div class="out-actions">
+        <button class="btn-restart" id="btn-back-to-builder">&larr; Back to edit</button>
+        <button class="btn-export" id="btn-export-word">Export as Word</button>
+        <button class="btn-export" id="btn-export-pdf">Export as PDF</button>
+        <button class="btn-restart" id="btn-restart">Start a new rubric</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="out-body">
+    <div class="out-doc" id="out-doc">
+      <!-- populated by JS -->
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ======================= GEORGIA DOE ELA STANDARDS DATA ======================= */
+/* Sourced from Georgia's K-12 English Language Arts (ELA) Standards: Foundations,
+   Language, Texts & Practices (GA DOE, approved May 2023) — domain / big idea /
+   standard structure, condensed for this builder. Guided picker currently covers
+   English Language Arts/Literacy; other subjects use manual entry. */
+const ELA_STANDARDS = {
+  "Foundations": {
+    code:"F",
+    note:"K–5 only — builds early literacy skills to aid reading comprehension.",
+    bigIdeas:{
+      "Phonics":{code:"P", standards:[
+        {code:"F.P.4", title:"Decoding & Encoding with Phonics", subskills:[
+          "Decode and encode words with graphemes that represent multiple letter-sound correspondences",
+          "Decode and encode single-syllable and multisyllabic words of all syllable types",
+          "Decode and encode words with common prefixes and suffixes"
+        ]}
+      ]},
+      "Fluency":{code:"F", standards:[
+        {code:"F.F.1", title:"Oral & Silent Reading Fluency", subskills:[
+          "Read grade-level texts with increasing accuracy and automaticity",
+          "Read grade-level texts aloud with appropriate prosody",
+          "Self-correct while reading to aid comprehension and fluency"
+        ]}
+      ]},
+      "Handwriting":{code:"H", standards:[
+        {code:"F.H.3", title:"Read Cursive", subskills:[
+          "Read phrases and sentences written in cursive",
+          "Read a variety of texts written in cursive"
+        ]},
+        {code:"F.H.4", title:"Write Cursive", subskills:[
+          "Form cursive letters and connectors between letters",
+          "Produce texts using cursive writing legibly and efficiently"
+        ]}
+      ]}
+    }
+  },
+  "Language": {
+    code:"L",
+    note:"Structures and conventions of standard English; grammar and vocabulary.",
+    bigIdeas:{
+      "Grammar Conventions":{code:"GC", standards:[
+        {code:"L.GC.1", title:"Grammar, Usage, & Mechanics", subskills:[
+          "Apply conventions of Standard English grammar, usage, and mechanics",
+          "Communicate clearly and precisely in written and spoken language",
+          "Use conventional capitalization, punctuation, and citations when incorporating evidence"
+        ]},
+        {code:"L.GC.2", title:"Syntax", subskills:[
+          "Distinguish correctly structured simple, compound, and complex sentences",
+          "Use a variety of sentence types to strengthen clarity and coherence",
+          "Maintain consistent verb tense within and across a text"
+        ]}
+      ]},
+      "Vocabulary":{code:"V", standards:[
+        {code:"L.V.1", title:"General, Academic, & Specialized Vocabulary", subskills:[
+          "Acquire general, academic, and specialized vocabulary through grade-level texts",
+          "Use grade-level vocabulary with precision to enhance communication"
+        ]},
+        {code:"L.V.2", title:"Word Analysis", subskills:[
+          "Deconstruct words using roots, root words, and affixes to determine meaning",
+          "Construct words using knowledge of roots and affixes"
+        ]},
+        {code:"L.V.3", title:"Meaning & Purpose", subskills:[
+          "Use context to determine or clarify the meaning of unknown and multiple-meaning words",
+          "Use print and digital reference materials to clarify word meaning",
+          "Distinguish shades of meaning among closely related words"
+        ]}
+      ]}
+    }
+  },
+  "Texts": {
+    code:"T",
+    note:"K–12 — purposeful engagement with texts across genres and modes.",
+    bigIdeas:{
+      "Context":{code:"C", standards:[
+        {code:"T.C.1", title:"Purpose & Audience", subskills:[
+          "Determine the purpose and target audience of a text",
+          "Describe how an author's choice of mode influences audience and purpose"
+        ]},
+        {code:"T.C.2", title:"Authors & Speakers", subskills:[
+          "Describe how a narrator or speaker's perspective influences the text",
+          "Make inferences about the context in which a text was written"
+        ]}
+      ]},
+      "Structure & Style":{code:"SS", standards:[
+        {code:"T.SS.1", title:"Organization", subskills:[
+          "Describe how text features and organizational structure represent ideas coherently",
+          "Craft related sentences or ideas into cohesive paragraphs using transitions"
+        ]},
+        {code:"T.SS.2", title:"Craft", subskills:[
+          "Identify and explain the use of figurative language",
+          "Use figurative language for intentional effect when writing"
+        ]}
+      ]},
+      "Techniques":{code:"T", standards:[
+        {code:"T.T.1", title:"Narrative Techniques", subskills:[
+          "Analyze how narrative techniques convey character, setting, and plot",
+          "Apply narrative techniques to develop a real or imagined experience"
+        ]},
+        {code:"T.T.2", title:"Expository Techniques", subskills:[
+          "Evaluate techniques used to present and design expository texts",
+          "Apply expository techniques to introduce and develop a topic with facts and details"
+        ]},
+        {code:"T.T.3", title:"Opinion Techniques", subskills:[
+          "Evaluate techniques used to present opinion and argumentative texts",
+          "Apply opinion techniques, supplying reasons and evidence with linking words"
+        ]},
+        {code:"T.T.4", title:"Poetic Techniques", subskills:[
+          "Discuss techniques used to present and design poetry",
+          "Apply poetic techniques to produce poetry for an intended effect"
+        ]}
+      ]},
+      "Research & Analysis":{code:"RA", standards:[
+        {code:"T.RA.1", title:"Research & Inquiry", subskills:[
+          "Generate and refine questions about a self-selected topic",
+          "Conduct research using multiple credible sources"
+        ]},
+        {code:"T.RA.2", title:"Curating Sources & Evidence", subskills:[
+          "Refer to specific passages or quotations to support an idea",
+          "Determine the credibility and relevance of a source text"
+        ]}
+      ]}
+    }
+  },
+  "Practices": {
+    code:"P",
+    note:"K–12 — literacy practices that ground Foundations, Language, and Texts.",
+    bigIdeas:{
+      "Engagement & Intention for Comprehension & Composition":{code:"EICC", standards:[
+        {code:"P.EICC.1", title:"Reader & Writer Identity", subskills:[
+          "Build an identity as a reader and writer",
+          "Develop independence and autonomy as a reader and writer"
+        ]},
+        {code:"P.EICC.3", title:"Comprehension Strategies", subskills:[
+          "Set a purpose for reading and monitor comprehension",
+          "Make, track, and support inferences within a text"
+        ]},
+        {code:"P.EICC.4", title:"Writing Processes", subskills:[
+          "Plan, draft, evaluate, revise, and edit texts",
+          "Evaluate a text's effectiveness against its purpose and audience"
+        ]}
+      ]},
+      "Situating Texts":{code:"ST", standards:[
+        {code:"P.ST.1", title:"Context", subskills:[
+          "Identify key components of context relevant to a text",
+          "Explore how context shapes an author's decisions"
+        ]},
+        {code:"P.ST.2", title:"Author, Audience, & Purpose", subskills:[
+          "Establish the purpose of a text being read or written",
+          "Establish a clear point of view when constructing texts"
+        ]}
+      ]},
+      "Author's Craft":{code:"AC", standards:[
+        {code:"P.AC.1", title:"Reading like a Writer", subskills:[
+          "Identify and evaluate an author's craft techniques",
+          "Explain how word choice and sentence structure affect the audience"
+        ]},
+        {code:"P.AC.2", title:"Writing like a Reader", subskills:[
+          "Make craft decisions with the audience's experience in mind",
+          "Craft words and phrases to influence the reader"
+        ]}
+      ]},
+      "Collaboration & Presentation":{code:"CP", standards:[
+        {code:"P.CP.1", title:"Collaboration", subskills:[
+          "Collaborate with others to accomplish shared goals",
+          "Offer and respond to feedback in group work"
+        ]},
+        {code:"P.CP.2", title:"Presentation", subskills:[
+          "Communicate clearly to present ideas and information",
+          "Vary tone and pace for purpose and audience"
+        ]}
+      ]}
+    }
+  }
+};
+
+/* ======================= STATE ======================= */
+const state = {
+  // Step 1 — Learning Goal (unchanged)
+  discourse: "Write an informative paragraph that states a main idea and develops it with relevant key details from the text.",
+  sentence: "Complex and compound sentences",
+  words: "culture, expedition, westward expansion, displacement, reservations",
+
+  // Step 2 — Task & Product (unchanged)
+  instructions: "Read the anchor text, then write one paragraph that states a main idea about the impact of westward expansion and explains it with key details from the text.",
+  focusingQuestion: "How did U.S. westward expansion impact Native American cultures in the West?",
+  existingRubric: "",
+  exemplar: "",
+
+  // Step 3 — Align to the standards
+  subjectArea: "English Language Arts/Literacy",
+  gradeLevel: "5th Grade",
+  standardsMethod: "browse", // "type" | "browse"
+  manualStandards: ["RI.5.1","RI.5.2","RI.5.3","W.5.2",""],
+  browseDomain: "",
+  browseBigIdea: "",
+  browseStandardCode: "",
+  selectedStandards: [
+    {code:"L.GC.2", title:"Syntax", subskills:["Distinguish correctly structured simple, compound, and complex sentences"]},
+    {code:"T.T.2", title:"Expository Techniques", subskills:["Apply expository techniques to introduce and develop a topic with facts and details"]}
+  ],
+
+  // Step 4 — Unit context
+  curriculumName: "Wit & Wisdom",
+  moduleUnit: "Grade 5, Module 1",
+  anchorText: "\u201CLewis & Clark Expedition,\u201D Handout 1A",
+  anchorTextFile: "",
+  prerequisiteSkills: "Students have studied the Louisiana Purchase and can identify Native Nations of the western territories from earlier lessons.",
+  skillsAcquired: "Determining main idea, selecting relevant key details, explaining cause/effect, connecting textual evidence to a broader concept.",
+
+  // Step 5 — Student language proficiency
+  totalELs: "12",
+  levelCounts: {1:2, 2:2, 3:3, 4:2, 5:2, 6:1}
+};
+
+const GRADE_OPTIONS = ["Kindergarten","1st Grade","2nd Grade","3rd Grade","4th Grade","5th Grade"];
+const SUBJECT_OPTIONS = ["English Language Arts/Literacy","Math","Social Studies","Science"];
+
+function combinedStandards(){
+  const manual = state.manualStandards.map(s=>s.trim()).filter(Boolean);
+  const browsed = state.selectedStandards.map(s=>s.code);
+  return [...new Set([...manual, ...browsed])];
+}
+
+/* ======================= STEP CONFIG ======================= */
+const steps = [
+  {
+    eyebrow: "Step 1 of 6",
+    title: "Set the learning goal",
+    sub: "These three answers anchor the entire rubric \u2014 what students produce, how they must structure it, and the vocabulary they need to do it.",
+    fields: [
+      { key:"discourse", type:"textarea", q:"What is the product you expect students to produce at the end of the unit or module?", hint:"This becomes the Discourse-level goal." },
+      { key:"sentence", type:"text", q:"What sentence structures do you want students to use?", hint:"This becomes the Sentence-level goal." },
+      { key:"words", type:"textarea", q:"List 3\u20135 content-area vocabulary words students should use.", hint:"Separate with commas. This becomes the Word/Phrase-level goal." }
+    ]
+  },
+  {
+    eyebrow: "Step 2 of 6",
+    title: "Describe the task",
+    sub: "Tell us exactly what students are asked to do, and share anything you already have \u2014 an existing rubric or a model response \u2014 so the output matches your classroom.",
+    fields: [
+      { key:"instructions", type:"textarea", q:"What are the assignment instructions or question prompt?", hint:"What guidance will students be given to complete the task?" },
+      { key:"focusingQuestion", type:"textarea", q:"What is the focusing question task?", hint:"The specific question students must answer in their response." },
+      { key:"existingRubric", type:"file", q:"Existing rubric (optional)", hint:"Attach one if you have it \u2014 we\u2019ll align to your structure instead of starting from scratch." },
+      { key:"exemplar", type:"file", q:"Exemplar of the final product (optional)", hint:"A strong sample response helps calibrate the top proficiency levels." }
+    ]
+  },
+  {
+    eyebrow: "Step 3 of 6",
+    title: "Align to the standards",
+    sub: "Choose the subject and grade, then add standards by typing them in or browsing Georgia\u2019s domain \u2192 big idea \u2192 standard structure.",
+    custom: "standards"
+  },
+  {
+    eyebrow: "Step 4 of 6",
+    title: "Unit context",
+    sub: "This grounds the rubric in your curriculum, anchor text, and what students already know \u2014 so descriptors stay specific instead of generic.",
+    fields: [
+      { key:"curriculumName", type:"text", q:"Curriculum name", hint:"e.g. the program or publisher name." },
+      { key:"moduleUnit", type:"text", q:"Module or unit", hint:"e.g. Grade 5, Module 1." },
+      { key:"anchorText", type:"text", q:"Anchor text (title and author)", hint:"The text, video, or source students read, watch, or listen to." },
+      { key:"anchorTextFile", type:"file", q:"Attach the anchor text (optional)" },
+      { key:"prerequisiteSkills", type:"textarea", q:"What prerequisite knowledge do students bring to the unit?" },
+      { key:"skillsAcquired", type:"textarea", q:"What subskills will students learn throughout the unit or module?" }
+    ]
+  },
+  {
+    eyebrow: "Step 5 of 6",
+    title: "Student language proficiency",
+    sub: "Tell us how many English Learners are in the classroom and which WIDA levels are represented \u2014 this shapes how much scaffolding each level of the rubric needs.",
+    custom: "proficiency"
+  },
+  {
+    eyebrow: "Step 6 of 6",
+    title: "Review summary",
+    sub: "This is the complete brief we\u2019ll use to build your rubric. Use Edit to jump back and adjust anything before generating.",
+    custom: "review"
+  }
+];
+
+const STEP_LABELS = ["Learning goals","Task & product","Standards","Unit context","Language proficiency","Review"];
+
+let currentStep = 0;
+
+/* ======================= RENDER STEPPER ======================= */
+function renderStepper(){
+  const el = document.getElementById('stepper');
+  el.innerHTML = steps.map((s,i)=>{
+    const cls = i===currentStep ? 'active' : (i<currentStep ? 'done':'');
+    return `<div class="step ${cls}"><span class="num">${i<currentStep?'\u2713':i+1}</span><span>${STEP_LABELS[i]}</span></div>`;
+  }).join('');
+}
+
+/* ======================= GENERIC FIELD RENDERING ======================= */
+function buildGenericField(f){
+  const field = document.createElement('div');
+  field.className = 'field';
+  const label = document.createElement('label');
+  label.className='q'; label.textContent = f.q;
+  field.appendChild(label);
+  if(f.hint){
+    const hint = document.createElement('div');
+    hint.className='hint'; hint.textContent = f.hint;
+    field.appendChild(hint);
+  }
+
+  if(f.type === 'text'){
+    const input = document.createElement('input');
+    input.type='text'; input.value = state[f.key];
+    input.addEventListener('input', e=>{ state[f.key]=e.target.value; updateDraft(); });
+    field.appendChild(input);
+  } else if(f.type === 'number'){
+    const input = document.createElement('input');
+    input.type='number'; input.min="0"; input.value = state[f.key];
+    input.addEventListener('input', e=>{ state[f.key]=e.target.value; updateDraft(); });
+    field.appendChild(input);
+  } else if(f.type === 'textarea'){
+    const ta = document.createElement('textarea');
+    ta.value = state[f.key];
+    ta.addEventListener('input', e=>{ state[f.key]=e.target.value; updateDraft(); });
+    field.appendChild(ta);
+  } else if(f.type === 'select'){
+    const sel = document.createElement('select');
+    f.options.forEach(o=>{
+      const opt=document.createElement('option'); opt.value=o; opt.textContent=o;
+      if(o===state[f.key]) opt.selected=true;
+      sel.appendChild(opt);
+    });
+    sel.addEventListener('change', e=>{ state[f.key]=e.target.value; updateDraft(); });
+    field.appendChild(sel);
+  } else if(f.type === 'file'){
+    const up = document.createElement('div');
+    up.className='upload';
+    const fname = state[f.key] ? state[f.key] : 'No file attached';
+    up.innerHTML = `<span class="fname">${fname}</span><label class="btn-mini">Choose file<input type="file"></label>`;
+    up.querySelector('input[type=file]').addEventListener('change', e=>{
+      const name = e.target.files[0] ? e.target.files[0].name : '';
+      state[f.key] = name;
+      up.querySelector('.fname').textContent = name || 'No file attached';
+    });
+    field.appendChild(up);
+  }
+  return field;
+}
+
+/* ======================= STANDARDS STEP (custom) ======================= */
+function renderStandardsStep(wrap){
+  wrap.innerHTML = '';
+  // Subject + grade row
+  const row = document.createElement('div');
+  row.className = 'field-row';
+
+  const subjField = document.createElement('div');
+  subjField.className='field';
+  subjField.innerHTML = `<label class="q">Subject area</label>`;
+  const subjSel = document.createElement('select');
+  SUBJECT_OPTIONS.forEach(o=>{
+    const opt=document.createElement('option'); opt.value=o; opt.textContent=o;
+    if(o===state.subjectArea) opt.selected=true;
+    subjSel.appendChild(opt);
+  });
+  subjSel.addEventListener('change', e=>{ state.subjectArea=e.target.value; updateDraft(); renderStandardsStep(wrap); });
+  subjField.appendChild(subjSel);
+  row.appendChild(subjField);
+
+  const gradeField = document.createElement('div');
+  gradeField.className='field';
+  gradeField.innerHTML = `<label class="q">Grade level</label>`;
+  const gradeSel = document.createElement('select');
+  GRADE_OPTIONS.forEach(o=>{
+    const opt=document.createElement('option'); opt.value=o; opt.textContent=o;
+    if(o===state.gradeLevel) opt.selected=true;
+    gradeSel.appendChild(opt);
+  });
+  gradeSel.addEventListener('change', e=>{ state.gradeLevel=e.target.value; updateDraft(); });
+  gradeField.appendChild(gradeSel);
+  row.appendChild(gradeField);
+
+  wrap.appendChild(row);
+
+  // Method toggle
+  const methodField = document.createElement('div');
+  methodField.className = 'field';
+  methodField.innerHTML = `<label class="q">How would you like to add standards?</label>
+    <div class="hint">Type standard codes directly, or browse Georgia\u2019s domain \u2192 big idea \u2192 standard structure.</div>`;
+  const toggle = document.createElement('div');
+  toggle.className='method-toggle';
+  const typeBtn = document.createElement('button');
+  typeBtn.className='method-btn' + (state.standardsMethod==='type' ? ' active':'');
+  typeBtn.type='button'; typeBtn.textContent='Type them in';
+  const browseBtn = document.createElement('button');
+  browseBtn.className='method-btn' + (state.standardsMethod==='browse' ? ' active':'');
+  browseBtn.type='button'; browseBtn.textContent='Browse by domain';
+  typeBtn.addEventListener('click', ()=>{ state.standardsMethod='type'; renderStandardsStep(wrap); });
+  browseBtn.addEventListener('click', ()=>{ state.standardsMethod='browse'; renderStandardsStep(wrap); });
+  toggle.appendChild(typeBtn); toggle.appendChild(browseBtn);
+  methodField.appendChild(toggle);
+  wrap.appendChild(methodField);
+
+  const isELA = state.subjectArea === "English Language Arts/Literacy";
+  if(!isELA){
+    const note = document.createElement('div');
+    note.className='subject-note';
+    note.textContent = `The guided picker currently covers English Language Arts/Literacy standards. For ${state.subjectArea}, type standard codes or keywords directly below.`;
+    wrap.appendChild(note);
+  }
+
+  if(state.standardsMethod === 'type' || !isELA){
+    renderManualStandards(wrap);
+  } else {
+    renderBrowsePicker(wrap);
+  }
+
+  // Selected standards chips (always visible, accumulated from either method)
+  const chipsField = document.createElement('div');
+  chipsField.className='field';
+  chipsField.innerHTML = `<label class="q">Standards for this rubric</label>`;
+  const combined = combinedStandards();
+  if(combined.length){
+    const chips = document.createElement('div');
+    chips.className='std-chips';
+    combined.forEach(code=>{
+      const chip = document.createElement('span');
+      chip.className='std-chip';
+      chip.innerHTML = `<span class="code">${code}</span>`;
+      const rm = document.createElement('button');
+      rm.className='rm'; rm.type='button'; rm.innerHTML='&times;';
+      rm.addEventListener('click', ()=>{
+        state.manualStandards = state.manualStandards.map(s=> s.trim()===code ? '' : s);
+        state.selectedStandards = state.selectedStandards.filter(s=>s.code!==code);
+        updateDraft();
+        renderStandardsStep(wrap);
+      });
+      chip.appendChild(rm);
+      chips.appendChild(chip);
+    });
+    chipsField.appendChild(chips);
+  } else {
+    const empty = document.createElement('div');
+    empty.className='empty-note';
+    empty.textContent = 'No standards added yet.';
+    chipsField.appendChild(empty);
+  }
+  wrap.appendChild(chipsField);
+}
+
+function renderManualStandards(wrap){
+  const field = document.createElement('div');
+  field.className = 'field';
+  field.innerHTML = `<label class="q">Standard codes</label>
+    <div class="hint">Start typing a standard code or a few words from the standard. Up to five.</div>`;
+
+  const datalist = document.createElement('datalist');
+  datalist.id = 'std-suggestions';
+  if(state.subjectArea === "English Language Arts/Literacy"){
+    Object.values(ELA_STANDARDS).forEach(domain=>{
+      Object.values(domain.bigIdeas).forEach(bi=>{
+        bi.standards.forEach(s=>{
+          const opt = document.createElement('option');
+          opt.value = `${s.code} \u2014 ${s.title}`;
+          datalist.appendChild(opt);
+        });
+      });
+    });
+  }
+  field.appendChild(datalist);
+
+  state.manualStandards.forEach((val, idx)=>{
+    const input = document.createElement('input');
+    input.type='text';
+    input.value = val;
+    input.setAttribute('list','std-suggestions');
+    input.placeholder = `Standard ${idx+1}`;
+    input.style.marginBottom = '8px';
+    input.addEventListener('input', e=>{
+      state.manualStandards[idx] = e.target.value;
+      updateDraft();
+    });
+    field.appendChild(input);
+  });
+  wrap.appendChild(field);
+}
+
+function renderBrowsePicker(wrap){
+  const field = document.createElement('div');
+  field.className='field';
+  field.innerHTML = `<label class="q">Browse Georgia's ELA standards</label>
+    <div class="hint">Domain \u2192 Big Idea \u2192 Standard. Sourced from Georgia's K\u201312 ELA Standards (GA DOE).</div>`;
+
+  const row = document.createElement('div');
+  row.className = 'picker-row';
+
+  const domainSel = document.createElement('select');
+  const domainDefault = document.createElement('option'); domainDefault.value=''; domainDefault.textContent='Select a domain\u2026';
+  domainSel.appendChild(domainDefault);
+  Object.keys(ELA_STANDARDS).forEach(d=>{
+    const opt=document.createElement('option'); opt.value=d; opt.textContent=`Domain: ${d}`;
+    if(d===state.browseDomain) opt.selected=true;
+    domainSel.appendChild(opt);
+  });
+  domainSel.addEventListener('change', e=>{
+    state.browseDomain = e.target.value;
+    state.browseBigIdea = '';
+    state.browseStandardCode = '';
+    renderStandardsStep(wrap.closest('#step-fields'));
+  });
+  row.appendChild(domainSel);
+
+  const bigIdeaSel = document.createElement('select');
+  const biDefault = document.createElement('option'); biDefault.value=''; biDefault.textContent='Select a big idea\u2026';
+  bigIdeaSel.appendChild(biDefault);
+  bigIdeaSel.disabled = !state.browseDomain;
+  if(state.browseDomain){
+    Object.keys(ELA_STANDARDS[state.browseDomain].bigIdeas).forEach(bi=>{
+      const opt=document.createElement('option'); opt.value=bi; opt.textContent=bi;
+      if(bi===state.browseBigIdea) opt.selected=true;
+      bigIdeaSel.appendChild(opt);
+    });
+  }
+  bigIdeaSel.addEventListener('change', e=>{
+    state.browseBigIdea = e.target.value;
+    state.browseStandardCode = '';
+    renderStandardsStep(wrap.closest('#step-fields'));
+  });
+  row.appendChild(bigIdeaSel);
+  field.appendChild(row);
+
+  const standardSel = document.createElement('select');
+  const stdDefault = document.createElement('option'); stdDefault.value=''; stdDefault.textContent='Select a standard\u2026';
+  standardSel.appendChild(stdDefault);
+  standardSel.disabled = !state.browseBigIdea;
+  standardSel.style.marginBottom = '12px';
+  let standardsList = [];
+  if(state.browseDomain && state.browseBigIdea){
+    standardsList = ELA_STANDARDS[state.browseDomain].bigIdeas[state.browseBigIdea].standards;
+    standardsList.forEach(s=>{
+      const opt=document.createElement('option'); opt.value=s.code; opt.textContent=`${s.code} \u2014 ${s.title}`;
+      if(s.code===state.browseStandardCode) opt.selected=true;
+      standardSel.appendChild(opt);
+    });
+  }
+  standardSel.addEventListener('change', e=>{
+    state.browseStandardCode = e.target.value;
+    renderStandardsStep(wrap.closest('#step-fields'));
+  });
+  field.appendChild(standardSel);
+
+  const chosen = standardsList.find(s=>s.code===state.browseStandardCode);
+  if(chosen){
+    const box = document.createElement('div');
+    box.className='subskill-box';
+    box.innerHTML = `<div class="std-title">${chosen.code} \u2014 ${chosen.title}</div>
+      <ul>${chosen.subskills.map(s=>`<li>${s}</li>`).join('')}</ul>`;
+    const addBtn = document.createElement('button');
+    addBtn.className='btn-add'; addBtn.type='button';
+    const already = state.selectedStandards.some(s=>s.code===chosen.code);
+    addBtn.textContent = already ? 'Already added' : 'Add this standard';
+    addBtn.disabled = already;
+    addBtn.addEventListener('click', ()=>{
+      state.selectedStandards.push(chosen);
+      updateDraft();
+      renderStandardsStep(wrap.closest('#step-fields'));
+    });
+    box.appendChild(addBtn);
+    field.appendChild(box);
+  }
+
+  wrap.appendChild(field);
+}
+
+/* ======================= PROFICIENCY STEP (custom) ======================= */
+const LEVEL_LABELS = {
+  1:"Level 1 \u2014 Entering", 2:"Level 2 \u2014 Emerging", 3:"Level 3 \u2014 Developing",
+  4:"Level 4 \u2014 Expanding", 5:"Level 5 \u2014 Bridging", 6:"Level 6 or reclassified \u2014 Reaching"
+};
+function renderProficiencyStep(wrap){
+  const totalField = document.createElement('div');
+  totalField.className='field prof-total';
+  totalField.innerHTML = `<label class="q">How many English Learners are in the classroom?</label>`;
+  const totalInput = document.createElement('input');
+  totalInput.type='number'; totalInput.min='0'; totalInput.value = state.totalELs;
+  totalInput.addEventListener('input', e=>{ state.totalELs = e.target.value; updateProfRunning(); updateDraft(); });
+  totalField.appendChild(totalInput);
+  wrap.appendChild(totalField);
+
+  const levelsField = document.createElement('div');
+  levelsField.className='field';
+  levelsField.innerHTML = `<label class="q">Levels represented and how many per level</label>
+    <div class="hint">Enter a count for each WIDA level present in the classroom. Leave at 0 if not represented.</div>`;
+  const table = document.createElement('div');
+  table.className='prof-table';
+  [1,2,3,4,5,6].forEach(n=>{
+    const row = document.createElement('div');
+    row.className='prof-row';
+    const lbl = document.createElement('div');
+    lbl.className='lvl-label'; lbl.textContent = LEVEL_LABELS[n];
+    const input = document.createElement('input');
+    input.type='number'; input.min='0'; input.value = state.levelCounts[n];
+    input.addEventListener('input', e=>{
+      state.levelCounts[n] = parseInt(e.target.value || '0', 10);
+      updateProfRunning();
+      updateDraft();
+    });
+    row.appendChild(lbl); row.appendChild(input);
+    table.appendChild(row);
+  });
+  levelsField.appendChild(table);
+
+  const running = document.createElement('div');
+  running.id = 'prof-running';
+  levelsField.appendChild(running);
+  wrap.appendChild(levelsField);
+
+  updateProfRunning();
+}
+function updateProfRunning(){
+  const el = document.getElementById('prof-running');
+  if(!el) return;
+  const entered = Object.values(state.levelCounts).reduce((a,b)=>a+(parseInt(b,10)||0),0);
+  const total = parseInt(state.totalELs,10) || 0;
+  el.className = 'prof-running ' + (entered===total && total>0 ? 'match':'mismatch');
+  el.textContent = total ? `Entered so far: ${entered} of ${total} English Learners.` : `Entered so far: ${entered} English Learners across levels.`;
+}
+
+/* ======================= REVIEW STEP (custom) ======================= */
+function renderReviewStep(wrap){
+  const groups = [
+    { title:"Learning goal", stepIndex:0, rows:[
+      ["End-of-unit product", state.discourse],
+      ["Sentence structures", state.sentence],
+      ["Key vocabulary", state.words],
+    ]},
+    { title:"Task & product", stepIndex:1, rows:[
+      ["Instructions", state.instructions],
+      ["Focusing question", state.focusingQuestion],
+      ["Existing rubric", state.existingRubric || '\u2014'],
+      ["Exemplar", state.exemplar || '\u2014'],
+    ]},
+    { title:"Standards", stepIndex:2, rows:[
+      ["Subject / Grade", `${state.subjectArea} \u00b7 ${state.gradeLevel}`],
+      ["Standards selected", combinedStandards().join(', ') || '\u2014'],
+    ]},
+    { title:"Unit context", stepIndex:3, rows:[
+      ["Curriculum", state.curriculumName],
+      ["Module / unit", state.moduleUnit],
+      ["Anchor text", state.anchorText],
+      ["Prerequisite skills", state.prerequisiteSkills],
+      ["Skills to acquire", state.skillsAcquired],
+    ]},
+    { title:"Student language proficiency", stepIndex:4, rows:[
+      ["Total English Learners", state.totalELs || '\u2014'],
+      ["Levels represented", [1,2,3,4,5,6].filter(n=>state.levelCounts[n]>0).map(n=>`${LEVEL_LABELS[n]}: ${state.levelCounts[n]}`).join(' \u00b7 ') || '\u2014'],
+    ]},
+  ];
+
+  groups.forEach(g=>{
+    const groupEl = document.createElement('div');
+    groupEl.className='review-group';
+    const head = document.createElement('div');
+    head.className='review-group-head';
+    head.innerHTML = `<h4>${g.title}</h4>`;
+    const editBtn = document.createElement('button');
+    editBtn.className='edit-link'; editBtn.type='button'; editBtn.textContent='Edit';
+    editBtn.addEventListener('click', ()=>{ currentStep = g.stepIndex; renderStep(); window.scrollTo({top:0}); });
+    head.appendChild(editBtn);
+    groupEl.appendChild(head);
+
+    const rows = document.createElement('div');
+    rows.className='review-rows';
+    g.rows.forEach(r=>{
+      const rrow = document.createElement('div');
+      rrow.className='rrow';
+      rrow.innerHTML = `<div class="rk">${r[0]}</div><div class="rv">${r[1] || '\u2014'}</div>`;
+      rows.appendChild(rrow);
+    });
+    groupEl.appendChild(rows);
+    wrap.appendChild(groupEl);
+  });
+}
+
+/* ======================= RENDER STEP ======================= */
+function renderStep(){
+  const step = steps[currentStep];
+  document.getElementById('step-eyebrow').textContent = step.eyebrow;
+  document.getElementById('step-title').textContent = step.title;
+  document.getElementById('step-sub').textContent = step.sub;
+
+  const wrap = document.getElementById('step-fields');
+  wrap.innerHTML = '';
+
+  if(step.custom === 'standards'){
+    renderStandardsStep(wrap);
+  } else if(step.custom === 'proficiency'){
+    renderProficiencyStep(wrap);
+  } else if(step.custom === 'review'){
+    renderReviewStep(wrap);
+  } else {
+    step.fields.forEach(f=> wrap.appendChild(buildGenericField(f)));
+  }
+
+  document.getElementById('btn-back').disabled = (currentStep===0);
+  document.getElementById('btn-next').textContent = (currentStep === steps.length-1) ? 'Build my rubric' : 'Next';
+  renderStepper();
+}
+
+/* ======================= LIVE DRAFT ======================= */
+function updateDraft(){
+  document.getElementById('d-title').textContent = `${state.gradeLevel} End-of-Unit WIDA-Aligned Rubric`;
+  const unitLabel = [state.curriculumName, state.moduleUnit].filter(Boolean).join(' \u00b7 ') || 'Unit not yet named';
+  document.getElementById('d-meta').textContent = `${state.gradeLevel} \u00b7 ${state.subjectArea} \u00b7 ${unitLabel}`;
+
+  setDraftText('d-fq', state.focusingQuestion);
+  setDraftText('d-discourse', state.discourse);
+  setDraftText('d-sentence', state.sentence);
+
+  const wordTags = document.getElementById('d-words');
+  const words = state.words.split(',').map(w=>w.trim()).filter(Boolean);
+  wordTags.innerHTML = words.length ? words.map(w=>`<span class="draft-tag">${w}</span>`).join('') : '<span class="v empty">Not yet entered</span>';
+
+  const stTags = document.getElementById('d-standards');
+  const combined = combinedStandards();
+  stTags.innerHTML = combined.length ? combined.map(s=>`<span class="draft-tag mono">${s}</span>`).join('') : '<span class="v empty">None selected</span>';
+}
+function setDraftText(id, val){
+  const el = document.getElementById(id);
+  if(val && val.trim()){ el.textContent = val; el.classList.remove('empty'); }
+  else { el.textContent = 'Not yet entered'; el.classList.add('empty'); }
+}
+
+/* ======================= NAV ======================= */
+document.getElementById('btn-next').addEventListener('click', ()=>{
+  if(currentStep < steps.length-1){ currentStep++; renderStep(); window.scrollTo({top:0}); }
+  else { buildOutput(); showOutput(); }
+});
+document.getElementById('btn-back').addEventListener('click', ()=>{
+  if(currentStep>0){ currentStep--; renderStep(); window.scrollTo({top:0}); }
+});
+
+function showOutput(){
+  document.getElementById('builder-view').style.display='none';
+  document.getElementById('output-view').style.display='block';
+}
+document.getElementById('btn-back-to-builder').addEventListener('click', ()=>{
+  document.getElementById('output-view').style.display='none';
+  document.getElementById('builder-view').style.display='grid';
+  currentStep = steps.length - 1; // back to Review step
+  renderStep();
+  window.scrollTo({top:0});
+});
+document.getElementById('btn-restart').addEventListener('click', ()=>{
+  document.getElementById('output-view').style.display='none';
+  document.getElementById('builder-view').style.display='grid';
+  currentStep = 0;
+  renderStep();
+  window.scrollTo({top:0});
+});
+
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(()=> t.classList.remove('show'), 2600);
+}
+
+function getExportFilename(ext){
+  const grade = state.gradeLevel.replace(/\s+/g,'_');
+  return `WIDA_Rubric_${grade}_${Date.now()}.${ext}`;
+}
+
+/* ---- Shared: build a self-contained HTML string of the output for export ---- */
+function buildExportHTML(){
+  const docEl = document.getElementById('out-doc');
+  const content = docEl.innerHTML;
+
+  return `
+<!DOCTYPE html>
+<html lang="en" xmlns:o="urn:schemas-microsoft-com:office:office"
+      xmlns:w="urn:schemas-microsoft-com:office:word"
+      xmlns="http://www.w3.org/TR/REC-html40">
+<head>
+<meta charset="UTF-8">
+<style>
+  body{
+    font-family: Calibri, 'Segoe UI', Arial, sans-serif;
+    font-size: 11pt;
+    color: #20261c;
+    max-width: 820px;
+    margin: 0 auto;
+    padding: 24px 20px;
+    line-height: 1.5;
+  }
+  h1{ font-size: 20pt; margin: 0 0 8px; font-weight: bold; }
+  h2{ font-size: 15pt; margin: 24px 0 10px; font-weight: bold; }
+  h4{ font-size: 11pt; font-weight: bold; color: #93611f; margin: 10px 0 6px; }
+  b, strong{ font-weight: bold; }
+  table{
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 10pt;
+    margin: 12px 0 20px;
+    page-break-inside: auto;
+  }
+  table th, table td{
+    border: 1px solid #bbb;
+    padding: 7px 9px;
+    text-align: left;
+    vertical-align: top;
+    line-height: 1.45;
+  }
+  table thead th{
+    background: #181f2e;
+    color: #fff;
+    font-weight: bold;
+    font-size: 9.5pt;
+  }
+  ul{ margin: 4px 0; padding-left: 18px; }
+  li{ margin-bottom: 4px; }
+
+  .out-header{ margin-bottom: 24px; padding-bottom: 16px; border-bottom: 2px solid #181f2e; }
+  .out-kicker{ font-size: 10pt; color: #93611f; font-weight: bold; margin-bottom: 6px; }
+  .out-h1{ font-size: 20pt; font-weight: bold; margin: 0 0 10px; }
+  .out-fq{ font-size: 11pt; color: #5a5e4f; }
+  .out-fq b{ color: #20261c; }
+  .out-meta-row{ display: flex; flex-wrap: wrap; gap: 18px; margin-top: 14px; }
+  .out-meta-item .lbl{ font-size: 8.5pt; color: #5a5e4f; }
+  .out-meta-item .val{ font-size: 10pt; font-weight: bold; }
+
+  .out-section{ margin-bottom: 32px; }
+  .sec-head{ margin-bottom: 12px; }
+  .sec-num{ font-size: 10pt; color: #93611f; font-weight: bold; }
+  .sec-title{ font-size: 15pt; font-weight: bold; display: inline; margin-left: 8px; }
+  .sec-note{ font-size: 10pt; color: #5a5e4f; margin: 0 0 12px; }
+
+  .obj-grid{ display: table; width: 100%; border: 1px solid #bbb; margin: 10px 0 18px; }
+  .obj-col{ display: table-cell; width: 50%; padding: 14px 16px; vertical-align: top; }
+  .obj-col + .obj-col{ border-left: 1px solid #bbb; }
+  .obj-dim{ margin-bottom: 10px; }
+  .obj-dim .dname{ font-size: 9pt; font-weight: bold; color: #5a5e4f; }
+  .obj-dim .dtext{ font-size: 10pt; }
+
+  .content-obj-list{ list-style: none; margin: 0; padding: 0; border: 1px solid #bbb; }
+  .content-obj-list li{ display: table; width: 100%; padding: 10px 14px; font-size: 10pt; border-bottom: 1px solid #bbb; }
+  .content-obj-list .co-left{ display: table-cell; width: 40%; font-weight: bold; vertical-align: top; padding-right: 12px; }
+  .content-obj-list .co-right{ display: table-cell; color: #5a5e4f; vertical-align: top; }
+
+  .lvl-chip{ font-weight: bold; }
+  .lvl-dot{
+    display: inline-block; width: 18px; height: 18px; border-radius: 50%;
+    text-align: center; line-height: 18px; font-size: 9pt; font-weight: bold;
+    margin-right: 4px;
+  }
+  .lvl-name{ font-size: 9pt; color: #5a5e4f; }
+  tr.lvl6 td:first-child .lvl-dot{ background: #181f2e; color: #fff; }
+  tr.lvl5 td:first-child .lvl-dot{ background: #93611f; color: #fff; }
+  tr.lvl4 td:first-child .lvl-dot{ background: #c68a3d; color: #3a2a10; }
+  tr.lvl3 td:first-child .lvl-dot{ background: #dcb87c; color: #3a2a10; }
+  tr.lvl2 td:first-child .lvl-dot{ background: #e9d7ae; color: #3a2a10; }
+  tr.lvl1 td:first-child .lvl-dot{ background: #f1e6c8; color: #3a2a10; }
+
+  .ex-note{ display: block; margin-top: 4px; font-size: 9pt; color: #3f5c4c; }
+  .ex-note b{ color: #3f5c4c; }
+
+  .evidence-list{ list-style: none; margin: 0; padding: 0; border: 1px solid #bbb; }
+  .evidence-list li{ padding: 9px 14px; font-size: 10pt; border-bottom: 1px solid #bbb; }
+  .evidence-list .box{
+    display: inline-block; width: 12px; height: 12px;
+    border: 1.5px solid #3f5c4c; margin-right: 8px; vertical-align: middle;
+  }
+
+  .scaffold-bands{ display: table; width: 100%; border: 1px solid #bbb; margin: 10px 0; }
+  .scaffold-band{ display: table-cell; width: 33.3%; padding: 12px 14px; vertical-align: top; }
+  .scaffold-band + .scaffold-band{ border-left: 1px solid #bbb; }
+  .scaffold-band .band-lvl{ font-size: 10pt; font-weight: bold; color: #93611f; margin-bottom: 8px; }
+  .scaffold-band ul{ font-size: 9.5pt; color: #5a5e4f; }
+
+  .assumption-list{ list-style: none; margin: 0; padding: 0; }
+  .assumption-list li{ padding: 8px 0; font-size: 10pt; color: #5a5e4f; border-bottom: 1px solid #ddd; }
+  .assumption-list .tag{
+    font-size: 8.5pt; font-family: 'Courier New', monospace; color: #3f5c4c;
+    background: #eaf0ea; border: 1px solid #cddccf; padding: 1px 5px;
+    margin-right: 8px;
+  }
+  .mono{ font-family: 'Courier New', monospace; }
+
+  @page{
+    size: letter;
+    margin: 0.75in 0.75in 0.75in 0.75in;
+  }
+  @media print{
+    body{ padding: 0; }
+    table{ page-break-inside: auto; }
+    tr{ page-break-inside: avoid; }
+  }
+</style>
+<!--[if gte mso 9]>
+<xml>
+  <w:WordDocument>
+    <w:View>Print</w:View>
+    <w:Zoom>100</w:Zoom>
+    <w:DoNotOptimizeForBrowser/>
+  </w:WordDocument>
+</xml>
+<![endif]-->
+</head>
+<body>
+${content}
+</body>
+</html>`;
+}
+
+/* ---- WORD EXPORT ---- */
+function exportWord(){
+  showToast('Generating Word document\u2026');
+
+  try {
+    const html = buildExportHTML();
+    const blob = new Blob(['\ufeff', html], { type: 'application/msword' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = getExportFilename('doc');
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(()=>{ document.body.removeChild(a); URL.revokeObjectURL(url); }, 200);
+    showToast('Word document downloaded.');
+  } catch(err){
+    console.error('Word export error:', err);
+    showToast('Export failed \u2014 see console for details.');
+  }
+}
+
+/* ---- PDF EXPORT ---- */
+function exportPDF(){
+  showToast('Generating PDF \u2014 this may take a moment\u2026');
+
+  const docEl = document.getElementById('out-doc');
+
+  // Create a clone so we can style it for export without affecting the page
+  const clone = docEl.cloneNode(true);
+  clone.style.width = '780px';
+  clone.style.padding = '0';
+  clone.style.background = '#fff';
+
+  // Unstick table headers for PDF capture
+  clone.querySelectorAll('thead th').forEach(th => {
+    th.style.position = 'static';
+  });
+
+  const opt = {
+    margin:       [0.5, 0.5, 0.5, 0.5],
+    filename:     getExportFilename('pdf'),
+    image:        { type: 'jpeg', quality: 0.96 },
+    html2canvas:  { scale: 2, useCORS: true, logging: false, width: 780 },
+    jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' },
+    pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
+  };
+
+  // Temporarily add clone to body for rendering
+  clone.style.position = 'absolute';
+  clone.style.left = '-9999px';
+  document.body.appendChild(clone);
+
+  html2pdf().set(opt).from(clone).save().then(()=>{
+    document.body.removeChild(clone);
+    showToast('PDF downloaded.');
+  }).catch(err=>{
+    console.error('PDF export error:', err);
+    document.body.removeChild(clone);
+    showToast('PDF export failed \u2014 see console for details.');
+  });
+}
+
+document.getElementById('btn-export-word').addEventListener('click', exportWord);
+document.getElementById('btn-export-pdf').addEventListener('click', exportPDF);
+
+/* ======================= OUTPUT DOC ======================= */
+const RUBRIC_SECTIONS = [
+  {id:'task-summary', label:'Task & context summary'},
+  {id:'content-objectives', label:'Content objectives'},
+  {id:'language-objectives', label:'Interpretive & expressive language objectives'},
+  {id:'interpretive-rubric', label:'Interpretive / Process rubric'},
+  {id:'expressive-rubric', label:'Expressive / Product rubric'},
+  {id:'content-evidence', label:'Content evidence checklist'},
+  {id:'scaffolds', label:'Scaffolds & supports'},
+  {id:'assumptions', label:'Assumptions & implementation notes'},
+];
+
+const LEVELS = [
+  {n:6, name:'Reaching'}, {n:5, name:'Bridging'}, {n:4, name:'Expanding'},
+  {n:3, name:'Developing'}, {n:2, name:'Emerging'}, {n:1, name:'Entering'}
+];
+
+const INTERPRETIVE_DATA = {
+  6:{d:"Analyzes how the article\u2019s organization builds from exploration to later westward expansion; evaluates which details most strongly develop the author\u2019s final point.", s:"Comprehends varied compound and complex sentences and explains how clauses communicate causal relationships.", w:"Interprets modal and evaluative language; distinguishes what the author states directly from what can be inferred."},
+  5:{d:"Analyzes cohesion across paragraphs and explains how earlier details about routes and exploration connect to the later discussion of expansion.", s:"Comprehends compound and complex sentences and tracks relationships expressed through subordinate clauses.", w:"Understands abstract nouns and adverbials central to the passage, including development, diplomacy, and displacement."},
+  4:{d:"Analyzes connections among the main idea and supporting details and identifies cause/effect relationships linking the expedition with later expansion.", s:"Comprehends simple and compound sentences with different structures; begins processing complex relationships with support.", w:"Understands common academic and content collocations such as westward expansion and diplomatic relations in context."},
+  3:{d:"Identifies the basic informational organization and selects relevant details about the expedition, expansion, and Native peoples.", s:"Comprehends simple sentences and recognizes common dependent clauses that explain reason, time, or result.", w:"Understands key technical language needed for the task, including expedition, route, and reservations."},
+  2:{d:"Identifies sequences of important ideas in chunked text and matches key details to categories such as expedition, expansion, and impact.", s:"Comprehends short simple sentences and basic variations in sentence order, especially with visuals or rereading.", w:"Recognizes familiar vocabulary and uses context, glossary, or visuals to determine word meanings."},
+  1:{d:"Identifies early relationships among ideas using highlighted excerpts, pictures, maps, and teacher modeling.", s:"Comprehends sentence fragments and occasional simple sentences with modeling; begins recognizing transition words.", w:"Recognizes word parts and familiar vocabulary with visual or bilingual support."}
+};
+
+const EXPRESSIVE_DATA = {
+  6:{d:"Produces a cohesive, well-developed paragraph that establishes the main idea and moves purposefully from known to new information, ending with a synthesis.", s:"Uses varied compound and complex sentences deliberately to show cause, time, contrast, and consequence.", w:"Uses precise disciplinary vocabulary plus modal or evaluative language, e.g. significantly affected, resulted in."},
+  5:{d:"Produces a cohesive paragraph with a clear main idea, logically ordered details, explanation, and closure.", s:"Uses controlled compound and complex sentences, including dependent clauses with because, when, or which, to elaborate evidence.", w:"Uses abstract nouns and adverbials precisely, e.g. expansion, development, displacement."},
+  4:{d:"Organizes a paragraph around a clear main idea and connects two or more relevant details logically.", s:"Uses simple and compound sentences with emerging variation; may attempt complex sentences with connectors like because.", w:"Uses appropriate content phrases such as westward expansion and diplomatic relations with generally accurate meaning."},
+  3:{d:"Uses a basic informational pattern: main idea \u2192 related details \u2192 ending/explanation.", s:"Uses mostly complete simple sentences and may add dependent clauses, particularly with because.", w:"Uses important technical vocabulary from the unit; some terms may be repetitive or imprecise."},
+  2:{d:"With a paragraph organizer, sequences a main idea and one or more relevant facts; uses simple transitions such as first, then, later.", s:"Produces primarily simple sentences; can complete or adapt a modeled structure.", w:"Uses familiar content words accurately with a word bank."},
+  1:{d:"With visuals, word banks, and modeled language, communicates a central idea using words and phrases.", s:"Uses sentence fragments and occasional simple sentences with emerging subject\u2013verb agreement.", w:"Uses high-frequency, picture-supported content words and begins using word families to build meaning."}
+};
+
+function levelDot(n){ return `<span class="lvl-dot mono">${n}</span>`; }
+
+function boldWordsInText(text, words){
+  let out = text;
+  words.forEach(w=>{
+    if(!w) return;
+    const escaped = w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const re = new RegExp(`(${escaped})`, 'ig');
+    out = out.replace(re, '<b>$1</b>');
+  });
+  return out;
+}
+function exampleSnippet(levelIdx, words){
+  if(!words.length) return '';
+  const pick = [...new Set([words[levelIdx % words.length], words[(levelIdx+2) % words.length]])];
+  return `<span class="ex-note">e.g., ${pick.map(w=>`<b>${w}</b>`).join(', ')}</span>`;
+}
+
+function buildRubricTable(data){
+  const words = state.words.split(',').map(w=>w.trim()).filter(Boolean);
+  const rows = LEVELS.map((l, idx)=>{
+    const c = data[l.n];
+    const wCell = boldWordsInText(c.w, words) + exampleSnippet(idx, words);
+    return `<tr class="lvl${l.n}">
+      <td><span class="lvl-chip">${levelDot(l.n)}<span class="lvl-name">${l.name}</span></span></td>
+      <td>${c.d}</td>
+      <td>${c.s}</td>
+      <td>${wCell}</td>
+    </tr>`;
+  }).join('');
+  return `<div class="table-scroll"><table class="rubric">
+    <thead><tr><th>Level</th><th>Discourse \u2014 Organization &amp; cohesion</th><th>Sentence \u2014 Grammatical complexity</th><th>Word/Phrase \u2014 Precision</th></tr></thead>
+    <tbody>${rows}</tbody>
+  </table></div>`;
+}
+
+function buildOutput(){
+  const wordList = state.words.split(',').map(w=>w.trim()).filter(Boolean);
+  const standardsList = combinedStandards();
+  const unitLabel = [state.curriculumName, state.moduleUnit].filter(Boolean).join(', ');
+  const levelsRepresented = [1,2,3,4,5,6].filter(n=>state.levelCounts[n]>0);
+
+  const doc = document.getElementById('out-doc');
+  doc.innerHTML = `
+    <div class="out-header" id="task-summary">
+      <div class="out-kicker">${state.gradeLevel} \u00b7 ${state.subjectArea}</div>
+      <h1 class="out-h1">${state.gradeLevel} End-of-Unit WIDA-Aligned FQT Rubric</h1>
+      <p class="out-fq"><b>Focusing question:</b> ${state.focusingQuestion}</p>
+      <div class="out-meta-row">
+        <div class="out-meta-item"><div class="lbl">Anchor text</div><div class="val">${state.anchorText}</div></div>
+        <div class="out-meta-item"><div class="lbl">Unit</div><div class="val">${unitLabel || '\u2014'}</div></div>
+        <div class="out-meta-item"><div class="lbl">Standards</div><div class="val">${standardsList.join(', ') || '\u2014'}</div></div>
+        <div class="out-meta-item"><div class="lbl">English Learners</div><div class="val">${state.totalELs || '0'} \u00b7 Levels ${levelsRepresented.join(', ') || '\u2014'}</div></div>
+      </div>
+    </div>
+
+    <section class="out-section" id="content-objectives">
+      <div class="sec-head"><span class="sec-num">01</span><h2 class="sec-title">Content objectives</h2></div>
+      <p class="sec-note">Kept separate from language objectives so a student\u2019s content knowledge is never obscured by their English proficiency level.</p>
+      <ul class="content-obj-list">
+        <li><span class="co-left">Determine the main idea</span><span class="co-right">Identify how the anchor text\u2019s events connect to the focusing question.</span></li>
+        <li><span class="co-left">Identify relevant key details</span><span class="co-right">Select details such as ${wordList.slice(0,3).join(', ') || 'routes, contact, development'} that support the main idea.</span></li>
+        <li><span class="co-left">Explain a cause/effect relationship</span><span class="co-right">Explain how one event led to changes, rather than only listing facts.</span></li>
+        <li><span class="co-left">Write an accurate informational response</span><span class="co-right">Use evidence from the text without adding unsupported claims.</span></li>
+      </ul>
+    </section>
+
+    <section class="out-section" id="language-objectives">
+      <div class="sec-head"><span class="sec-num">02</span><h2 class="sec-title">Interpretive &amp; expressive language objectives</h2></div>
+      <p class="sec-note">Built from your Discourse, Sentence, and Word-level goals \u2014 what students must understand from the text (interpretive) and what they must produce in writing (expressive).</p>
+      <div class="obj-grid">
+        <div class="obj-col">
+          <h4>Interpretive \u2014 reading the anchor text</h4>
+          <div class="obj-dim"><div class="dname">Discourse</div><div class="dtext">Analyze how the text\u2019s main idea and key details connect to the focusing question.</div></div>
+          <div class="obj-dim"><div class="dname">Sentence</div><div class="dtext">Comprehend ${state.sentence.toLowerCase()} expressing sequence and cause/effect.</div></div>
+          <div class="obj-dim"><div class="dname">Word/Phrase</div><div class="dtext">Understand content vocabulary such as ${wordList.join(', ') || 'key unit terms'} when determining relevant evidence.</div></div>
+        </div>
+        <div class="obj-col">
+          <h4>Expressive \u2014 producing the response</h4>
+          <div class="obj-dim"><div class="dname">Discourse</div><div class="dtext">${state.discourse}</div></div>
+          <div class="obj-dim"><div class="dname">Sentence</div><div class="dtext">Convey relationships using ${state.sentence.toLowerCase()} with connectors such as because, so, and as a result.</div></div>
+          <div class="obj-dim"><div class="dname">Word/Phrase</div><div class="dtext">Communicate ideas using precise vocabulary: ${wordList.join(', ') || 'key unit terms'}.</div></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="out-section" id="interpretive-rubric">
+      <div class="sec-head"><span class="sec-num">03</span><h2 class="sec-title">Interpretive / Process rubric</h2></div>
+      <p class="sec-note">Describes what students comprehend while reading ${state.anchorText}, before they write \u2014 scored separately from the written product. Word/Phrase examples below are drawn from your unit vocabulary.</p>
+      ${buildRubricTable(INTERPRETIVE_DATA)}
+    </section>
+
+    <section class="out-section" id="expressive-rubric">
+      <div class="sec-head"><span class="sec-num">04</span><h2 class="sec-title">Expressive / Product rubric</h2></div>
+      <p class="sec-note">Describes the language of the finished paragraph. This is your end-of-unit scoring rubric.</p>
+      ${buildRubricTable(EXPRESSIVE_DATA)}
+    </section>
+
+    <section class="out-section" id="content-evidence">
+      <div class="sec-head"><span class="sec-num">05</span><h2 class="sec-title">Content evidence checklist</h2></div>
+      <p class="sec-note">Meets / not-yet content criteria, tracked apart from WIDA language levels so the two are never averaged together.</p>
+      <ul class="evidence-list">
+        <li><span class="box"></span>Answers the focusing question with an accurate main idea.</li>
+        <li><span class="box"></span>Uses at least two relevant key details from the text or unit.</li>
+        <li><span class="box"></span>Explains how the details connect through cause/effect rather than only listing facts.</li>
+        <li><span class="box"></span>Accurately explains the impact described, supported by unit materials.</li>
+        <li><span class="box"></span>Avoids unsupported or historically inaccurate claims.</li>
+      </ul>
+    </section>
+
+    <section class="out-section" id="scaffolds">
+      <div class="sec-head"><span class="sec-num">06</span><h2 class="sec-title">Scaffolds &amp; supports</h2></div>
+      <p class="sec-note">Reduce linguistic load without reducing the conceptual goal. Grouped by proficiency band and sized to the ${state.totalELs || '0'} English Learners entered for this class.</p>
+      <div class="scaffold-bands">
+        <div class="scaffold-band">
+          <div class="band-lvl">Levels 1\u20132</div>
+          <ul>
+            <li>Labeled map or visuals</li>
+            <li>Bilingual glossary</li>
+            <li>Vocabulary Frayer Model</li>
+            <li>Key-detail evidence bank</li>
+            <li>Cause/effect organizer</li>
+            <li>Paragraph frame + oral rehearsal</li>
+          </ul>
+        </div>
+        <div class="scaffold-band">
+          <div class="band-lvl">Levels 3\u20134</div>
+          <ul>
+            <li>Word bank</li>
+            <li>Color-coded annotation</li>
+            <li>Sentence starters</li>
+            <li>Partner rehearsal</li>
+            <li>Transition word bank</li>
+          </ul>
+        </div>
+        <div class="scaffold-band">
+          <div class="band-lvl">Levels 5\u20136</div>
+          <ul>
+            <li>Largely independent analysis and writing</li>
+            <li>Optional planning organizer</li>
+            <li>Precise cause/effect and abstract nouns encouraged</li>
+            <li>Distinguish evidence from inference</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="out-section" id="assumptions">
+      <div class="sec-head"><span class="sec-num">07</span><h2 class="sec-title">Assumptions &amp; implementation notes</h2></div>
+      <ul class="assumption-list">
+        <li><span class="tag">grade</span>Descriptors are pitched to ${state.gradeLevel} \u2014 verify against your district\u2019s coding.</li>
+        <li><span class="tag">standards</span>Standards used: ${standardsList.join(', ') || 'none selected'}, drawn from Georgia\u2019s ${state.subjectArea} standards. Confirm against your district\u2019s current adoption.</li>
+        <li><span class="tag">proficiency</span>Scaffold intensity reflects ${state.totalELs || '0'} English Learners across levels ${levelsRepresented.join(', ') || 'none entered'}.</li>
+        <li><span class="tag">review</span>This is a locally developed instructional tool, not an official WIDA assessment or ACCESS score.</li>
+        <li><span class="tag">scope</span>Students should not be penalized for omitting effects the anchor text does not itself teach.</li>
+      </ul>
+    </section>
+  `;
+
+  populateJump();
+}
+
+function populateJump(){
+  const sel = document.getElementById('jump-select');
+  sel.innerHTML = RUBRIC_SECTIONS.map(s=>`<option value="${s.id}">${s.label}</option>`).join('');
+  sel.addEventListener('change', e=>{
+    const target = document.getElementById(e.target.value);
+    if(target) target.scrollIntoView({behavior:'smooth', block:'start'});
+  });
+
+  const sections = RUBRIC_SECTIONS.map(s=>document.getElementById(s.id)).filter(Boolean);
+  const observer = new IntersectionObserver((entries)=>{
+    entries.forEach(entry=>{
+      if(entry.isIntersecting){
+        sel.value = entry.target.id;
+      }
+    });
+  }, { rootMargin: '-90px 0px -70% 0px', threshold: 0 });
+  sections.forEach(s=>observer.observe(s));
+}
+
+/* ======================= INIT ======================= */
+renderStep();
+updateDraft();
+</script>
+</body>
+</html>
