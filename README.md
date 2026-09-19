@@ -205,6 +205,56 @@ Text is trimmed to `MAX_EXTRACTED_CHARS` (default 40,000) before being sent.
 
 ---
 
+## Deploying to Vercel
+
+Three files at the repo root make this deployable; nothing in `backend/` or
+`frontend/` had to move.
+
+| File | Why |
+|------|-----|
+| `asgi.py` | Vercel auto-detects a FastAPI `app` in a root `asgi.py`. It only puts `backend/` on the path and re-exports the real app, mirroring what `run.sh` does. |
+| `requirements.txt` | Vercel reads dependencies from the root. `backend/requirements.txt` now points here, so the README's install command still works. |
+| `vercel.json` | Sets `maxDuration` to 300s and keeps `legacy/`, `docs/` and the virtualenv out of the function bundle. |
+
+Set these in the Vercel dashboard under **Environment Variables**:
+
+```
+GEMINI_API_KEY=...
+LLM_PROVIDER=gemini
+```
+
+**Do not copy `CORS_ORIGINS` or `MAX_UPLOAD_BYTES` across from your local
+`.env`.** Both defaults are now correct for Vercel and both local values break
+something:
+
+- `CORS_ORIGINS` must stay empty. The API and the page share an origin, so CORS
+  is unnecessary — and a top-level middleware stops Vercel promoting the static
+  mount to its CDN, which would push all 21 frontend files back through the
+  Python function.
+- `MAX_UPLOAD_BYTES` must stay under 4.5 MB. Vercel rejects larger request
+  bodies at the edge with its own 413 before the app ever sees them, so a
+  higher app limit only replaces a clear message with an opaque one.
+
+### How the frontend gets served
+
+`main.py` mounts `frontend/` with `StaticFiles` as before. Vercel detects that
+mount at build time and promotes those files to its CDN, so they never invoke
+the function. The `/api` routers are registered *before* the mount, which is
+what gives them priority over CDN files — keep that order.
+
+Locally nothing changes: `./run.sh` still serves both from one uvicorn process.
+
+### Known constraints
+
+- Generation takes 20-60s against a 300s ceiling, which is comfortable, but it
+  is still a synchronous request. If it ever grows past this, streaming or a
+  background job is the way out, not a longer timeout.
+- `/api/rubric/generate` has no authentication or rate limiting and spends your
+  API key. That is fine on localhost and not fine on a public URL. Decide who
+  should reach it before sharing the deployment.
+
+---
+
 ## Notes and limits
 
 - The guided standards picker covers **Georgia ELA** only. Other subjects fall

@@ -19,13 +19,22 @@ app = FastAPI(
     version="1.0.0",
 )
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[o.strip() for o in settings.cors_origins.split(",") if o.strip()],
-    allow_credentials=False,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# CORS is only needed when the page is served from a different origin than the
+# API. It never is here: run.sh and Vercel both answer both from one origin, and
+# config.js points at the same origin by default. It is also not free to add --
+# Vercel refuses to promote a FastAPI app's static mounts to its CDN when the
+# app carries top-level middleware, which would push all 21 frontend files back
+# through the Python function. So only attach it when someone opts in by
+# setting CORS_ORIGINS.
+_cors_origins = [o.strip() for o in settings.cors_origins.split(",") if o.strip()]
+if _cors_origins:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=_cors_origins,
+        allow_credentials=False,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
 app.include_router(rubric.router)
 app.include_router(documents.router)

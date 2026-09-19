@@ -45,12 +45,18 @@ class Settings:
     max_output_tokens: int = int(_env("LLM_MAX_OUTPUT_TOKENS", "32768"))
     request_timeout: float = float(_env("LLM_REQUEST_TIMEOUT", "180"))
 
-    # Upload limits for document extraction.
-    max_upload_bytes: int = int(_env("MAX_UPLOAD_BYTES", str(10 * 1024 * 1024)))
+    # Upload limits for document extraction. Vercel rejects any request body
+    # over 4.5 MB at the platform edge with its own 413 before the app sees it,
+    # so stay under that and the teacher gets our message instead of a raw
+    # FUNCTION_PAYLOAD_TOO_LARGE.
+    max_upload_bytes: int = int(_env("MAX_UPLOAD_BYTES", str(4 * 1024 * 1024)))
     max_extracted_chars: int = int(_env("MAX_EXTRACTED_CHARS", "40000"))
 
-    # Comma-separated list; "*" allows any origin (fine for local dev).
-    cors_origins: str = _env("CORS_ORIGINS", "*")
+    # Comma-separated list of allowed origins. Empty (the default) attaches no
+    # CORS middleware at all, which is correct whenever the API and the page
+    # share an origin -- and required for Vercel to serve the frontend from its
+    # CDN. Only set this if you serve the frontend from somewhere else.
+    cors_origins: str = _env("CORS_ORIGINS", "")
 
     host: str = _env("HOST", "127.0.0.1")
     port: int = int(_env("PORT", "8000"))

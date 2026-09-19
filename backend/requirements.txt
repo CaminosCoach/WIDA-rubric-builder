@@ -1,10 +1,4 @@
-fastapi==0.115.6
-uvicorn[standard]==0.34.0
-pydantic==2.10.4
-python-multipart==0.0.20
-python-dotenv==1.0.1
-httpx==0.28.1
-
-# Document handling
-pypdf==5.1.0
-python-docx==1.1.2
+# Dependencies live at the repo root so Vercel can find them; see
+# ../requirements.txt. This indirection keeps `pip install -r
+# backend/requirements.txt` working as the README documents.
+-r ../requirements.txt

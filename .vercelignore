@@ -1,0 +1,8 @@
+# Keep the deployment bundle to what actually runs.
+legacy/
+docs/
+.venv/
+__pycache__/
+*.pyc
+run.sh
+.claude/
