@@ -1,271 +1,74 @@
-# Rubric Builder — WIDA-Aligned Language Rubrics
+# Rubric Builder - WIDA-Aligned Language Rubrics
 
-A six-step wizard that collects a teacher's unit brief and generates a complete
-WIDA-aligned end-of-unit rubric with an LLM, then exports it to Word or PDF.
-
----
-
-## Quick start
-
-```bash
-# 1. Install
-python3 -m venv .venv
-.venv/bin/pip install -r backend/requirements.txt
-
-# 2. Configure — copy the template and paste in your key
-cp .env.example .env
-#    then edit .env and set GEMINI_API_KEY=...
-#    Get a key at https://aistudio.google.com/apikey
-
-# 3. Run
-./run.sh
-```
-
-Then open **http://127.0.0.1:8000**.
-
-The server serves both the API and the frontend, so there is only one thing to
-start and no CORS to configure.
-
----
+A six-step wizard that turns a teacher's unit brief into a WIDA-aligned
+language rubric, with Word and PDF exports.
 
 ## What it does
 
-A teacher answers six steps — learning goals, the task, standards, unit
-context, and the WIDA levels present in their classroom — and the app sends
-that brief to an LLM, which writes the rubric.
+Enter learning goals, task instructions, standards, unit context, and student
+proficiency levels. The app generates content and language objectives,
+interpretive and expressive rubrics, a content evidence checklist, scaffolds,
+and implementation notes. Task metadata is copied from the teacher's brief.
 
-The generated document has eight sections:
+Attach PDF, DOCX, or plain-text documents to include their extracted text.
+Download the result as Word or export the displayed rubric to PDF.
 
-| # | Section | Generated |
-|---|---------|-----------|
-| — | Task & context summary | From the form (not the model — see below) |
-| 01 | Content objectives | LLM |
-| 02 | Interpretive & expressive language objectives | LLM |
-| 03 | Interpretive / Process rubric (6 levels × 3 dimensions) | LLM |
-| 04 | Expressive / Product rubric (6 levels × 3 dimensions) | LLM |
-| 05 | Content evidence checklist | LLM |
-| 06 | Scaffolds & supports | LLM |
-| 07 | Assumptions & implementation notes | LLM |
+## Deploy to Vercel
 
-**The header is deliberately not model-generated.** Anchor text, unit,
-standards, and EL counts are verbatim echoes of what the teacher typed. Asking
-the model to restate them adds a chance it says "11 English Learners" when the
-teacher entered 12, with no upside. Those fields are copied straight from the
-brief in [`backend/app/services/validate.py`](backend/app/services/validate.py).
+1. Import the repository into Vercel. Use the directory containing `asgi.py`,
+   `requirements.txt`, and `vercel.json` as the project root.
+2. Set these environment variables for the deployment:
 
----
+   ```text
+   LLM_PROVIDER=gemini
+   GEMINI_API_KEY=your-api-key
+   ```
 
-## Project layout
+3. Leave `CORS_ORIGINS` and `MAX_UPLOAD_BYTES` unset to use the app's defaults.
+4. Deploy, then open `/api/health` on the deployment URL to check the provider
+   and key configuration. Generate a rubric to verify the provider connection.
 
-```
-.
-├── run.sh                       Start the server
-├── .env.example                 Config template — copy to .env
-│
-├── frontend/                    Static; no build step, no bundler
-│   ├── index.html               Page shell and markup
-│   ├── css/
-│   │   ├── tokens.css           Colour variables, reset, typography
-│   │   ├── builder.css          Wizard: header, stepper, fields, draft card
-│   │   ├── output.css           Generated document, tables, overlay
-│   │   └── responsive.css       Breakpoints
-│   └── js/
-│       ├── main.js              Entry point: step state, view switching
-│       ├── config.js            API endpoint URLs
-│       ├── state.js             The teacher's answers + derived helpers
-│       ├── api.js               Every backend call
-│       ├── data/
-│       │   ├── standards.js     Georgia ELA standards tree
-│       │   └── steps.js         Step definitions and option lists
-│       ├── ui/                  One module per step, plus draft/toast/stepper
-│       ├── output/              Rubric renderer and the two exports
-│       └── util/html.js         HTML escaping
-│
-├── backend/
-│   ├── requirements.txt
-│   └── app/
-│       ├── main.py              FastAPI app; serves API + frontend
-│       ├── config.py            Environment settings
-│       ├── models.py            Request/response models
-│       ├── schema.py            The rubric JSON contract
-│       ├── routes/              rubric.py · documents.py · export.py
-│       ├── services/
-│       │   ├── prompt.py        Brief → system + user prompt
-│       │   ├── validate.py      Repairs and normalizes model output
-│       │   ├── extraction.py    PDF/DOCX/TXT → plain text
-│       │   └── docx_export.py   Rubric → real .docx
-│       └── llm/                 Swappable providers (see below)
-│
-└── legacy/
-    └── wida-rubric-builder.original.html   The original single file, kept for reference
-```
+The generation endpoint has no authentication or rate limiting and uses your
+provider account. Restrict access before sharing the deployment publicly.
 
----
+See the [deployment guide](DEPLOYMENT.md) for hosting details and limits.
 
-## Switching LLM providers
+## Provider configuration
 
-Three adapters ship: **Gemini** (default), **Anthropic Claude**, and **OpenAI**.
-Switch by editing one line in `.env`:
+Set `LLM_PROVIDER` and its matching API key in Vercel's environment variables.
+Override the model with the corresponding model variable when needed.
+
+| Provider | `LLM_PROVIDER` | API key variable | Model variable |
+|----------|----------------|------------------|----------------|
+| Gemini (default) | `gemini` | `GEMINI_API_KEY` | `GEMINI_MODEL` |
+| Anthropic | `anthropic` | `ANTHROPIC_API_KEY` | `ANTHROPIC_MODEL` |
+| OpenAI | `openai` | `OPENAI_API_KEY` | `OPENAI_MODEL` |
+
+Redeploy after changing deployment environment variables. Keep keys on the
+server; do not put them in frontend files or commit them to Git.
+
+## Local development
+
+For macOS or Linux, run from the repository root:
 
 ```bash
-LLM_PROVIDER=anthropic
-ANTHROPIC_API_KEY=sk-ant-...
+python3 -m venv .venv
+.venv/bin/pip install -r requirements.txt
 ```
 
-No code changes. `GET /api/rubric/providers` reports which ones have a key.
+Create a `.env` file in the repository root with the provider settings above,
+then run `./run.sh`. Open **http://127.0.0.1:8000**. The same server serves the
+frontend and API.
 
-### Adding a fourth provider
 
-Nothing above `app/llm/` knows which vendor answered. Adding one is two steps:
+## Project and developer documentation
 
-1. Write `app/llm/yourprovider.py` subclassing `LLMProvider` and implementing
-   `generate_json(system, user, schema) -> dict`.
-2. Add one line to `PROVIDERS` in [`app/llm/registry.py`](backend/app/llm/registry.py).
+- `frontend/` - static HTML, CSS, and JavaScript; no frontend build step.
+- `backend/` - FastAPI routes, provider adapters, and document services.
+- `asgi.py`, `requirements.txt`, `vercel.json` - deployment entry point,
+  dependencies, and function configuration.
+- [Developer guide](DEVELOPMENT.md) - generation, vocabulary assignment,
+  provider extensions, and API endpoints.
+- [Deployment guide](DEPLOYMENT.md) - Vercel configuration and serving behavior.
 
-Each adapter is responsible for translating the shared JSON Schema in
-`schema.py` into its own structured-output dialect — Gemini uses
-`responseSchema`, Claude a forced tool call, OpenAI strict `json_schema`. The
-helpers for that (`strictify`, `without_keys`) live in `app/llm/base.py`.
-
----
-
-## Where the rubric quality lives
-
-Almost all of it is in
-[`backend/app/services/prompt.py`](backend/app/services/prompt.py). That file
-holds the WIDA framing, the rule that content and language are never averaged,
-the level-by-level progression guidance, and a worked example used purely to
-calibrate tone and specificity. **If the output isn't right, edit that file
-first** — it will move the results far more than changing models will.
-
-`LLM_TEMPERATURE` in `.env` controls variation: lower is more consistent
-between runs, higher is more varied wording.
-
-### The vocabulary ladder
-
-The example terms printed under each Word/Phrase descriptor are **not** chosen by
-the model row by row — that produced `culture` at levels 1, 2, 3 and 5, because
-nothing stopped it.
-
-Instead the model first returns `vocabularyLadder`: 18 terms ranked from most
-concrete to most abstract. The teacher's own words sit in the upper half; the
-lower rungs are mined from the anchor text, so an Entering student's examples are
-words they can attach to a picture rather than the unit's academic targets.
-[`validate.py`](backend/app/services/validate.py) then cuts that ladder into six
-non-overlapping bands and assigns each level's terms by position.
-
-Because the bands don't overlap, **a term cannot appear at two levels of the same
-table** — that is a structural guarantee, not a prompt instruction. Each level's
-two tables take different slices of its band: interpretive the upper one,
-expressive the lower, since students recognize vocabulary before they can produce
-it.
-
-The model does the semantic judgment (which word is more abstract); the code does
-the assignment. To change how many terms print per level, edit `_examples_for`;
-to change the ladder length, edit `LADDER_RUNGS` in
-[`schema.py`](backend/app/schema.py) — it must stay divisible by 6.
-
----
-
-## Exports
-
-- **Word** — built server-side by `python-docx` as a genuine `.docx`, with real
-  tables and shaded level cells.
-- **PDF** — rendered client-side by html2pdf from the page itself, so the PDF
-  matches what's on screen.
-
----
-
-## API
-
-| Method | Path | Purpose |
-|--------|------|---------|
-| `GET`  | `/api/health` | Status, active provider, whether a key is set |
-| `GET`  | `/api/rubric/providers` | Available adapters and their config state |
-| `POST` | `/api/rubric/generate` | Brief in, rubric JSON out |
-| `POST` | `/api/documents/extract` | Upload a file, get its text |
-| `GET`  | `/api/documents/supported` | Allowed extensions and size limit |
-| `POST` | `/api/export/docx` | Rubric JSON in, `.docx` out |
-
-Interactive docs while the server is running: http://127.0.0.1:8000/docs
-
----
-
-## Uploaded documents
-
-Attaching an existing rubric, an exemplar, or the anchor text now means
-something: the file is uploaded, its text extracted server-side, and that text
-included in the prompt. PDF, DOCX, and plain text are supported, and DOCX table
-cells are read (existing rubrics are nearly always tables).
-
-Scanned PDFs are images and will fail with a message saying so — they would
-need OCR, which isn't wired up.
-
-Text is trimmed to `MAX_EXTRACTED_CHARS` (default 40,000) before being sent.
-
----
-
-## Deploying to Vercel
-
-Three files at the repo root make this deployable; nothing in `backend/` or
-`frontend/` had to move.
-
-| File | Why |
-|------|-----|
-| `asgi.py` | Vercel auto-detects a FastAPI `app` in a root `asgi.py`. It only puts `backend/` on the path and re-exports the real app, mirroring what `run.sh` does. |
-| `requirements.txt` | Vercel reads dependencies from the root. `backend/requirements.txt` now points here, so the README's install command still works. |
-| `vercel.json` | Sets `maxDuration` to 300s and keeps `legacy/`, `docs/` and the virtualenv out of the function bundle. |
-
-Set these in the Vercel dashboard under **Environment Variables**:
-
-```
-GEMINI_API_KEY=...
-LLM_PROVIDER=gemini
-```
-
-**Do not copy `CORS_ORIGINS` or `MAX_UPLOAD_BYTES` across from your local
-`.env`.** Both defaults are now correct for Vercel and both local values break
-something:
-
-- `CORS_ORIGINS` must stay empty. The API and the page share an origin, so CORS
-  is unnecessary — and a top-level middleware stops Vercel promoting the static
-  mount to its CDN, which would push all 21 frontend files back through the
-  Python function.
-- `MAX_UPLOAD_BYTES` must stay under 4.5 MB. Vercel rejects larger request
-  bodies at the edge with its own 413 before the app ever sees them, so a
-  higher app limit only replaces a clear message with an opaque one.
-
-### How the frontend gets served
-
-`main.py` mounts `frontend/` with `StaticFiles` as before. Vercel detects that
-mount at build time and promotes those files to its CDN, so they never invoke
-the function. The `/api` routers are registered *before* the mount, which is
-what gives them priority over CDN files — keep that order.
-
-Locally nothing changes: `./run.sh` still serves both from one uvicorn process.
-
-### Known constraints
-
-- Generation takes 20-60s against a 300s ceiling, which is comfortable, but it
-  is still a synchronous request. If it ever grows past this, streaming or a
-  background job is the way out, not a longer timeout.
-- `/api/rubric/generate` has no authentication or rate limiting and spends your
-  API key. That is fine on localhost and not fine on a public URL. Decide who
-  should reach it before sharing the deployment.
-
----
-
-## Notes and limits
-
-- The guided standards picker covers **Georgia ELA** only. Other subjects fall
-  back to typing codes manually; the standards tree is in
-  `frontend/js/data/standards.js`.
-- The wizard ships with a filled-in Lewis & Clark example so the flow can be
-  tried immediately. Clear those defaults in `frontend/js/state.js` before real
-  use.
-- Generation takes roughly 20–60 seconds. The overlay stays up, and a failure
-  leaves a retry button rather than dropping back to a blank screen.
-- Output is a locally developed instructional tool, **not** an official WIDA
-  assessment or ACCESS score. A teacher should read every descriptor before use.
-- `.env` is gitignored. Keep it that way — the key stays server-side and is
-  never sent to the browser.
+Interactive API documentation is available at `/docs` on the running app.
